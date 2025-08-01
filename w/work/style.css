@@ -270,6 +270,13 @@ body {
     box-shadow: 1px 1px 0px var(--color-dark);
 }
 
+/* Perbaikan: Styling khusus untuk tombol di modal arsip */
+.restore-button {
+    padding: 6px 12px;
+    font-size: 0.9em;
+    box-shadow: 2px 2px 0px var(--color-dark);
+}
+
 
 .error-message {
     color: var(--color-error);
@@ -379,17 +386,27 @@ body {
     gap: 10px;
     margin-bottom: 20px;
     justify-content: flex-start;
-    /* Perbaikan: Atur flex-wrap: nowrap dan flex-shrink untuk tampilan satu baris tanpa scroll */
+    /* Perbaikan: Menghapus aturan flex-wrap dan mengatur responsivitas agar tombol sebaris */
     flex-wrap: nowrap;
-    
-    /* Untuk tampilan satu baris di iPad */
-    align-items: center; 
-    
-    /* Tambahkan media query untuk mengatasi tampilan mobile yang sangat kecil */
-    @media (max-width: 480px) {
-        flex-wrap: wrap; /* Kembali wrap di mobile kecil */
+    align-items: center;
+}
+
+/* Perbaikan: Menjadikan tombol "Tambah Tugas Baru" dan "Generate Daily Report" sama ukurannya dan tetap sebaris */
+.action-buttons-row .button {
+    flex: 1 1 auto;
+    min-width: 0;
+    text-align: center;
+}
+
+/* Aturan untuk layar yang lebih kecil */
+@media (max-width: 480px) {
+    .action-buttons-row {
+        flex-wrap: nowrap;
+        overflow-x: auto; /* Memungkinkan scroll horizontal jika tombol terlalu banyak */
+        justify-content: flex-start;
     }
 }
+
 
 .add-task-button, .generate-report-button {
     flex-shrink: 0;
@@ -461,12 +478,13 @@ body {
 .status-badge.editing { background-color: #007bff; }
 .status-badge.take-konten { background-color: #17a2b8; }
 .status-badge.final-touch { background-color: #6f42c1; }
+/* Perbaikan: Tambahkan styling untuk status Done */
+.status-badge.done { background-color: #28a745; }
 .status-badge.on-hold { background-color: #ffc107; color: var(--color-text-main); }
-
-.status-badge.approved { background-color: var(--color-success); }
+.status-badge.archived { background-color: #6c757d; }
+.status-badge.approved { background-color: #28a745; }
 .status-badge.to-be-announced { background-color: #6c757d; }
-.status-badge.revised { background-color: var(--color-error); }
-.status-badge.archived { background-color: var(--color-grey-button); } /* Warna untuk archived */
+.status-badge.revised { background-color: #dc3545; }
 
 
 /* Priority Badges (Neobrutalism style) */
@@ -652,11 +670,14 @@ footer.hidden {
     margin: 0;
 }
 
+/* Perbaikan: Atur li menjadi flexbox untuk menempatkan tombol di kanan */
 #archivedProjectsList li {
-    padding: 8px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
     border-bottom: 1px dashed var(--color-dashed-line);
-    text-align: left;
-    color: var(--color-text-main);
 }
 
 #archivedProjectsList li:last-child {
@@ -774,6 +795,6 @@ footer.hidden {
         gap: 10px;
     }
     .action-buttons-row {
-        flex-direction: column;
+        flex-wrap: nowrap;
     }
 }
