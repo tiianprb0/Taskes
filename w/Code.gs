@@ -1,13 +1,27 @@
 /**
  * File: Code.gs
  * Description: Skrip Google Apps untuk berinteraksi dengan Google Spreadsheet.
- * Menyediakan endpoint API untuk membaca, menambah, memperbarui, dan mengarsipkan data tugas.
+ * Menyediakan endpoint API untuk membaca, menambah, memperbarui, mengarsipkan,
+ * mengembalikan, dan mendapatkan data arsip.
  */
 
 // Nama sheet tempat data tugas berada
 const SHEET_NAME = 'Active';
 // Nama sheet untuk arsip tugas
 const ARCHIVE_SHEET_NAME = 'Archive';
+// URL endpoint PHP untuk sinkronisasi manual
+const SYNC_URL = 'https://tiianprb.com/w/work/sync_tasks.php'; // Ganti dengan URL domain kamu
+
+/**
+ * Fungsi onOpen: Membuat menu kustom di Spreadsheet.
+ * Ini akan berjalan secara otomatis saat spreadsheet dibuka.
+ */
+function onOpen() {
+  SpreadsheetApp.getUi()
+      .createMenu('Taskes')
+      .addItem('Sync to Web App', 'syncToLocalJson')
+      .addToUi();
+}
 
 /**
  * Fungsi doGet: Menangani permintaan GET untuk membaca data dari spreadsheet.
@@ -69,11 +83,6 @@ function doPost(e) {
   }
 
   try {
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
-    if (!sheet) {
-      throw new Error(`Sheet dengan nama '${SHEET_NAME}' tidak ditemukan.`);
-    }
-
     // Pastikan request body ada dan bisa di-parse sebagai JSON
     if (!e.postData || !e.postData.contents) {
       throw new Error("Request body kosong atau tidak valid.");
@@ -86,15 +95,34 @@ function doPost(e) {
       throw new Error("Aksi (action) tidak ditentukan dalam permintaan.");
     }
 
-    // Dapatkan semua header untuk menemukan indeks kolom
-    const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
-
     if (action === 'add') {
+      const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
+      if (!sheet) throw new Error(`Sheet dengan nama '${SHEET_NAME}' tidak ditemukan.`);
+      const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
       return addTask(sheet, headers, requestData.task, output);
     } else if (action === 'update') {
+      const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
+      if (!sheet) throw new Error(`Sheet dengan nama '${SHEET_NAME}' tidak ditemukan.`);
+      const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
       return updateTask(sheet, headers, requestData.task, output);
     } else if (action === 'archive') {
-      return archiveTask(sheet, headers, requestData.taskId, output);
+      const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
+      if (!sheet) throw new Error(`Sheet dengan nama '${SHEET_NAME}' tidak ditemukan.`);
+      const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+      const taskIdToArchive = requestData.taskId;
+      if (!taskIdToArchive) throw new Error("Task ID diperlukan untuk mengarsipkan tugas.");
+      return archiveTask(sheet, headers, taskIdToArchive, output);
+    } else if (action === 'restore') {
+      const archiveSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(ARCHIVE_SHEET_NAME);
+      if (!archiveSheet) throw new Error(`Sheet dengan nama '${ARCHIVE_SHEET_NAME}' tidak ditemukan.`);
+      const activeSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
+      if (!activeSheet) throw new Error(`Sheet dengan nama '${SHEET_NAME}' tidak ditemukan.`);
+      const archiveHeaders = archiveSheet.getRange(1, 1, 1, archiveSheet.getLastColumn()).getValues()[0];
+      const taskIdToRestore = requestData.taskId;
+      if (!taskIdToRestore) throw new Error("Task ID diperlukan untuk mengembalikan tugas.");
+      return restoreTask(activeSheet, archiveSheet, archiveHeaders, taskIdToRestore, output);
+    } else if (action === 'getArchivedTasks') {
+      return getArchivedTasks(output);
     } else {
       throw new Error("Aksi tidak dikenal: " + action);
     }
@@ -193,10 +221,11 @@ function archiveTask(sheet, headers, taskIdToArchive, output) {
   const values = sheet.getDataRange().getValues();
   let rowIndexToDelete = -1;
   let rowToArchive = [];
+  const taskIdIndex = headers.indexOf('Task ID');
 
   // Cari baris berdasarkan Task ID
   for (let i = 1; i < values.length; i++) {
-    if (values[i][headers.indexOf('Task ID')] === taskIdToArchive) {
+    if (values[i][taskIdIndex] === taskIdToArchive) {
       rowIndexToDelete = i + 1; // +1 karena getRange menggunakan indeks 1-based
       rowToArchive = values[i];
       break;
@@ -217,6 +246,76 @@ function archiveTask(sheet, headers, taskIdToArchive, output) {
   return output;
 }
 
+/**
+ * Fungsi untuk mengembalikan tugas dari arsip. Memindahkan baris tugas kembali ke sheet 'Active'.
+ */
+function restoreTask(activeSheet, archiveSheet, archiveHeaders, taskIdToRestore, output) {
+  const archiveValues = archiveSheet.getDataRange().getValues();
+  let rowIndexToDelete = -1;
+  let rowToRestore = [];
+  const taskIdIndex = archiveHeaders.indexOf('Task ID');
+
+  // Cari baris berdasarkan Task ID di sheet arsip
+  for (let i = 1; i < archiveValues.length; i++) {
+    if (archiveValues[i][taskIdIndex] === taskIdToRestore) {
+      rowIndexToDelete = i + 1; // +1 karena getRange menggunakan indeks 1-based
+      rowToRestore = archiveValues[i];
+      break;
+    }
+  }
+
+  if (rowIndexToDelete === -1) {
+    throw new Error(`Tugas dengan Task ID '${taskIdToRestore}' tidak ditemukan di arsip.`);
+  }
+
+  // Hapus baris dari sheet arsip
+  archiveSheet.deleteRow(rowIndexToDelete);
+  
+  // Tambahkan baris ke sheet aktif
+  activeSheet.appendRow(rowToRestore);
+
+  output.setContent(JSON.stringify({ status: 'success', message: 'Tugas berhasil dikembalikan.' }));
+  return output;
+}
+
+/**
+ * Fungsi untuk mengambil semua tugas yang ada di sheet 'Archive'.
+ */
+function getArchivedTasks(output) {
+  try {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(ARCHIVE_SHEET_NAME);
+    if (!sheet) {
+      output.setContent(JSON.stringify({ status: 'success', data: [] }));
+      return output;
+    }
+
+    const range = sheet.getDataRange();
+    const values = range.getValues();
+
+    if (values.length <= 1) {
+      output.setContent(JSON.stringify({ status: 'success', data: [] }));
+      return output;
+    }
+
+    const headers = values[0];
+    const data = [];
+    for (let i = 1; i < values.length; i++) {
+      const row = values[i];
+      const rowObject = {};
+      for (let j = 0; j < headers.length; j++) {
+        rowObject[headers[j]] = row[j];
+      }
+      data.push(rowObject);
+    }
+    
+    output.setContent(JSON.stringify({ status: 'success', data: data }));
+    return output;
+  } catch (error) {
+    console.error("Error in getArchivedTasks:", error.message);
+    output.setContent(JSON.stringify({ status: 'error', message: error.message }));
+    return output;
+  }
+}
 
 /**
  * Fungsi untuk mengatur header kolom di spreadsheet secara otomatis.
@@ -256,7 +355,56 @@ function setSpreadsheetHeaders() {
   }
 }
 
-// Fungsi dummy untuk menghindari error saat deployment jika tidak ada fungsi lain
-function setup() {
-  // Ini adalah fungsi dummy. Tidak perlu dijalankan secara manual.
+/**
+ * Fungsi untuk mensinkronisasi data dari Google Spreadsheet ke file JSON lokal.
+ * Dipanggil dari menu kustom "Taskes > Sync to Web App".
+ */
+function syncToLocalJson() {
+  try {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
+    if (!sheet) {
+      throw new Error(`Sheet dengan nama '${SHEET_NAME}' tidak ditemukan.`);
+    }
+
+    const range = sheet.getDataRange();
+    const values = range.getValues();
+    
+    // Periksa apakah ada data selain header
+    if (values.length <= 1) {
+      SpreadsheetApp.getUi().alert('Tidak ada data tugas untuk disinkronkan.');
+      return;
+    }
+
+    const headers = values[0];
+    const tasks = [];
+    for (let i = 1; i < values.length; i++) {
+      const row = values[i];
+      const taskObject = {};
+      for (let j = 0; j < headers.length; j++) {
+        taskObject[headers[j]] = row[j];
+      }
+      tasks.push(taskObject);
+    }
+    
+    const payload = JSON.stringify({ data: tasks });
+    
+    const options = {
+      'method': 'post',
+      'contentType': 'application/json',
+      'payload': payload
+    };
+    
+    const response = UrlFetchApp.fetch(SYNC_URL, options);
+    const result = JSON.parse(response.getContentText());
+
+    if (result.status === 'success') {
+      SpreadsheetApp.getUi().alert('Sinkronisasi data ke web app berhasil!');
+    } else {
+      throw new Error(result.message || 'Sinkronisasi gagal.');
+    }
+
+  } catch (error) {
+    console.error("Error in syncToLocalJson:", error.message);
+    SpreadsheetApp.getUi().alert('Terjadi kesalahan saat sinkronisasi: ' + error.message);
+  }
 }
