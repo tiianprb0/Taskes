@@ -123,6 +123,8 @@ function doPost(e) {
       return restoreTask(activeSheet, archiveSheet, archiveHeaders, taskIdToRestore, output);
     } else if (action === 'getArchivedTasks') {
       return getArchivedTasks(output);
+    } else if (action === 'getAllTasks') { // NEW: Action to get all tasks
+        return doGet(e);
     } else {
       throw new Error("Aksi tidak dikenal: " + action);
     }
@@ -341,8 +343,8 @@ function setSpreadsheetHeaders() {
       'PIC / Team',
       'Deadline',
       'Priority',
-      'Attachment Link',
-      'Progress (%)' // Pastikan ini juga ada di header
+      'Attachment Link', // NEW: Pastikan ini ada di header
+      'Progress (%)'
     ];
 
     // Mengatur nilai header di baris pertama
