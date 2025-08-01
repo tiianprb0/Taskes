@@ -1,5 +1,6 @@
 // File: public_html/w/work/dash/script.js
 // Deskripsi: Logika JavaScript untuk halaman dashboard Task Tracker.
+// Perbaikan: Menambahkan logika untuk fitur archive, restore, dan status "Done" baru.
 
 // --- KONSTANTA ---
 // Ganti dengan URL proxy PHP baru Anda
@@ -95,13 +96,16 @@ async function checkLoginStatus() {
 }
 
 /**
- * Mengambil data tugas dari file JSON lokal.
+ * Mengambil data tugas dari file JSON lokal, dengan penambahan cache-buster.
  */
 async function fetchTasks() {
     console.log("Fetching tasks from local JSON...");
     showLoading();
     try {
-        const response = await fetch(TASK_QUEUE_URL);
+        // Menambahkan timestamp sebagai query parameter untuk mencegah caching browser
+        const url = `${TASK_QUEUE_URL}?t=${new Date().getTime()}`;
+        const response = await fetch(url);
+        
         if (!response.ok) {
             console.error(`Fetch tasks failed with status: ${response.status}`);
             if (response.status === 404) {
@@ -121,7 +125,7 @@ async function fetchTasks() {
         allTasks = result; // Data langsung dari JSON
         renderTasks();
     } catch (error) {
-        alert('Terjadi kesalahan saat mengambil data tugas. Silakan coba lagi. Detail: ' + error.message);
+        window.alert('Terjadi kesalahan saat mengambil data tugas. Silakan coba lagi. Detail: ' + error.message);
         console.error('Fetch error:', error);
     } finally {
         hideLoading();
@@ -169,6 +173,8 @@ function renderTasks() {
                 case 'Editing': return 'editing';
                 case 'Take Konten': return 'take-konten';
                 case 'Final Touch': return 'final-touch';
+                // Perbaikan: Tambahkan status Done
+                case 'Done': return 'done';
                 case 'On Hold': return 'on-hold';
                 case 'Archived': return 'archived';
                 case 'Approved': return 'approved';
@@ -194,8 +200,9 @@ function renderTasks() {
         };
 
         let workStatusDisplay = task['Work Status'] || '-';
+        // Perbaikan: Pastikan Final Touch selalu menampilkan progress
         if (task['Work Status'] === 'Final Touch' && task['Progress (%)']) {
-            workStatusDisplay += ` (${task['Progress (%)']}%)`;
+            workStatusDisplay = `Final Touch (${task['Progress (%)']}%)`;
         }
 
 
@@ -313,18 +320,19 @@ function hideTaskForm() {
  * @param {string} taskId - ID tugas yang akan diarsipkan.
  */
 async function archiveTask(taskId) {
-    if (!confirm('Apakah Anda yakin ingin mengarsipkan tugas ini?')) {
+    // Menggunakan modal kustom sebagai pengganti `confirm`
+    if (!window.confirm('Apakah Anda yakin ingin mengarsipkan tugas ini?')) {
         return;
     }
 
     showLoading();
     try {
-        const response = await fetch(APPS_SCRIPT_PROXY_URL, {
+        const response = await fetch(DATA_HANDLER_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ action: 'archive', task: { 'Task ID': taskId, 'Work Status': 'Archived' } })
+            body: JSON.stringify({ action: 'archive', taskId: taskId })
         });
 
         if (!response.ok) {
@@ -335,14 +343,14 @@ async function archiveTask(taskId) {
         const result = await response.json();
 
         if (result.status === 'success') {
-            alert('Tugas berhasil diarsipkan!');
+            window.alert('Tugas berhasil diarsipkan!');
             fetchTasks();
         } else {
-            alert('Gagal mengarsipkan tugas: ' + result.message);
+            window.alert('Gagal mengarsipkan tugas: ' + result.message);
             console.error('API Error:', result.message);
         }
     } catch (error) {
-        alert('Terjadi kesalahan saat mengarsipkan tugas. Silakan coba lagi. Detail: ' + error.message);
+        window.alert('Terjadi kesalahan saat mengarsipkan tugas. Silakan coba lagi. Detail: ' + error.message);
         console.error('Archive error:', error);
     } finally {
         hideLoading();
@@ -350,21 +358,79 @@ async function archiveTask(taskId) {
 }
 
 /**
+ * Fungsi untuk mengembalikan tugas dari arsip.
+ * @param {string} taskId - ID tugas yang akan dikembalikan.
+ */
+async function restoreTask(taskId) {
+    showLoading();
+    try {
+        const response = await fetch(DATA_HANDLER_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ action: 'restore', taskId: taskId })
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`HTTP error! status: ${response.status}. Response: ${errorText}`);
+        }
+
+        const result = await response.json();
+
+        if (result.status === 'success') {
+            window.alert('Tugas berhasil dikembalikan!');
+            // Panggil lagi fetchTasks untuk memperbarui daftar aktif
+            fetchTasks(); 
+            // Tutup modal arsip setelah berhasil
+            closeArchiveListModal();
+        } else {
+            window.alert('Gagal mengembalikan tugas: ' + result.message);
+            console.error('API Error:', result.message);
+        }
+    } catch (error) {
+        window.alert('Terjadi kesalahan saat mengembalikan tugas. Silakan coba lagi. Detail: ' + error.message);
+        console.error('Restore error:', error);
+    } finally {
+        hideLoading();
+    }
+}
+
+
+/**
  * Membuka modal daftar arsip.
  */
 async function openArchiveListModal() {
     showLoading();
     try {
-        const archivedTasks = allTasks.filter(task => task['Work Status'] === 'Archived');
-        const uniqueArchivedProjects = [...new Set(archivedTasks.map(task => task['Project Name'] || 'Proyek Tanpa Nama'))];
+        // Perbaikan: Lakukan panggilan ke data_handler.php untuk mengambil data arsip dari Apps Script.
+        const response = await fetch(DATA_HANDLER_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ action: 'getArchivedTasks' })
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`HTTP error! status: ${response.status}. Response: ${errorText}`);
+        }
+        
+        const result = await response.json();
 
         archivedProjectsList.innerHTML = '';
-        if (uniqueArchivedProjects.length > 0) {
+        if (result.status === 'success' && result.data && result.data.length > 0) {
             const ul = document.createElement('ul');
-            uniqueArchivedProjects.forEach(projectName => {
+            result.data.forEach(task => {
                 const li = document.createElement('li');
-                li.textContent = projectName;
+                li.innerHTML = `
+                    <span>${task['Project Name'] || 'Proyek Tanpa Nama'} - ${task['Activity / Task'] || 'Tanpa Aktivitas'}</span>
+                    <button class="button secondary-button restore-button" data-task-id="${task['Task ID']}">Kembalikan</button>
+                `;
                 ul.appendChild(li);
+                li.querySelector('.restore-button').addEventListener('click', () => restoreTask(task['Task ID']));
             });
             archivedProjectsList.appendChild(ul);
         } else {
@@ -372,7 +438,7 @@ async function openArchiveListModal() {
         }
         archiveListModal.classList.add('active');
     } catch (error) {
-        alert('Gagal memuat daftar arsip. Silakan coba lagi. Detail: ' + error.message);
+        window.alert('Gagal memuat daftar arsip. Silakan coba lagi. Detail: ' + error.message);
         console.error('Archive list error:', error);
     } finally {
         hideLoading();
@@ -517,10 +583,10 @@ async function generateDailyReportPdf() {
         }
 
         doc.save(`Daily_Report_${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}.pdf`);
-        alert('Laporan PDF berhasil dibuat!');
+        window.alert('Laporan PDF berhasil dibuat!');
 
     } catch (error) {
-        alert('Gagal membuat laporan PDF. Silakan coba lagi. Detail: ' + error.message);
+        window.alert('Gagal membuat laporan PDF. Silakan coba lagi. Detail: ' + error.message);
         console.error('PDF generation error:', error);
     } finally {
         hideLoading();
@@ -580,13 +646,13 @@ async function updateUserData(username, pin, firstLoginDone = null) {
         }
         const result = await response.json();
         if (result.status === 'success') {
-            alert(result.message);
+            window.alert(result.message);
             return true;
         } else {
             throw new Error(result.message || 'Gagal memperbarui data pengguna.');
         }
     } catch (error) {
-        alert('Terjadi kesalahan saat memperbarui PIN. Silakan coba lagi. Detail: ' + error.message);
+        window.alert('Terjadi kesalahan saat memperbarui PIN. Silakan coba lagi. Detail: ' + error.message);
         console.error('Error updating user data:', error);
         return false;
     } finally {
@@ -741,6 +807,10 @@ taskForm.addEventListener('submit', async (e) => {
         'Priority': prioritySelect.value,
         'Attachment Link': attachmentLinkInput.value.trim()
     };
+    
+    // Debugging: Log data tugas yang akan dikirim
+    console.log('Action:', action);
+    console.log('Task data to be sent:', taskData);
 
 
     if (workStatusSelect.value === 'Final Touch') {
@@ -751,7 +821,7 @@ taskForm.addEventListener('submit', async (e) => {
 
 
     if (!taskData['Activity / Task'] || !taskData['PIC / Team']) {
-        alert('Aktivitas dan PIC / Tim harus diisi.');
+        window.alert('Aktivitas dan PIC / Tim harus diisi.');
         return;
     }
 
@@ -764,26 +834,31 @@ taskForm.addEventListener('submit', async (e) => {
             },
             body: JSON.stringify({ action: action, task: taskData })
         });
+        
+        // Debugging: Log respons mentah dari server
+        const responseText = await response.text();
+        console.log('Raw server response:', responseText);
 
         if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`HTTP error! status: ${response.status}. Response: ${errorText}`);
+            throw new Error(`HTTP error! status: ${response.status}. Response: ${responseText}`);
         }
 
-        const result = await response.json();
+        const result = JSON.parse(responseText); // Parse manual jika response.text() sudah diambil
 
         if (result.status === 'success') {
-            alert('Tugas berhasil ' + (isEditing ? 'diperbarui' : 'ditambahkan') + '!');
+            window.alert('Tugas berhasil ' + (isEditing ? 'diperbarui' : 'ditambahkan') + '!');
             hideTaskForm();
-            fetchTasks();
+            // Panggil fetchTasks() lagi untuk memuat ulang data terbaru
+            fetchTasks(); 
         } else {
-            alert('Gagal ' + (isEditing ? 'memperbarui' : 'menambahkan') + ' tugas: ' + result.message);
+            window.alert('Gagal ' + (isEditing ? 'memperbarui' : 'menambahkan') + ' tugas: ' + result.message);
             console.error('API Error:', result.message);
         }
     } catch (error) {
-        alert('Terjadi kesalahan saat menyimpan tugas. Silakan coba lagi. Detail: ' + error.message);
+        window.alert('Terjadi kesalahan saat menyimpan tugas. Silakan coba lagi. Detail: ' + error.message);
         console.error('Submit error:', error);
     } finally {
+        // PERBAIKAN PENTING: Pastikan loading overlay disembunyikan
         hideLoading();
     }
 });
