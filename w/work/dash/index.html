@@ -137,9 +137,33 @@
                         <option value="High">High</option>
                     </select>
                 </div>
+
+                <!-- NEW: Attachment Section for Image Upload or URL -->
                 <div class="form-group">
-                    <label for="attachmentLink">Tautan Lampiran:</label>
-                    <input type="url" id="attachmentLink" class="input-field" placeholder="URL atau link Google Drive">
+                    <label>Lampiran:</label>
+                    <div class="attachment-options">
+                        <label class="radio-label">
+                            <input type="radio" name="attachment-type" value="upload" checked>
+                            Unggah File
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="attachment-type" value="url">
+                            Gunakan URL
+                        </label>
+                    </div>
+
+                    <div id="attachment-upload-group">
+                        <input type="file" id="attachmentFile" class="input-field" accept="image/*">
+                    </div>
+
+                    <div id="attachment-url-group" style="display: none;">
+                        <input type="url" id="attachmentLink" class="input-field" placeholder="URL atau link Google Drive">
+                    </div>
+
+                    <div id="image-preview-container" class="image-preview-container" style="display: none;">
+                        <img id="image-preview" src="#" alt="Pratinjau Gambar" class="image-preview">
+                        <button type="button" id="remove-image-button" class="remove-image-button">&times;</button>
+                    </div>
                 </div>
 
                 <div class="modal-buttons">
