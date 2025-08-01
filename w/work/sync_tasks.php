@@ -1,51 +1,55 @@
 <?php
 // File: public_html/w/work/sync_tasks.php
-// Deskripsi: Script ini mengambil data dari Google Apps Script dan menyimpannya ke task_queue.json.
-// Disarankan untuk dijalankan secara berkala sebagai cron job.
+// Deskripsi: Endpoint untuk menerima data tugas dari Google Apps Script dan menyimpannya ke task_queue.json.
+// Ini berfungsi sebagai mekanisme sinkronisasi manual dari spreadsheet.
 
-// Ganti dengan URL Google Apps Script Web App Anda
-const APPS_SCRIPT_REAL_URL = 'https://script.google.com/macros/s/AKfycby8gR_Ki7IlYP0o403qniePsAPysMnb-0VNgRzRo5DXg3QKTQK778EsoZMTL9Z38RJ61A/exec';
+// Path ke file lokal yang akan menyimpan data antrean tugas
 const QUEUE_FILE_PATH = __DIR__ . '/task_queue.json';
 
-// Fungsi untuk membaca data dari Apps Script via GET request
-function getTasksFromAppsScript() {
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, APPS_SCRIPT_REAL_URL);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-    curl_setopt($ch, CURLOPT_TIMEOUT, 30); // Beri waktu 30 detik untuk Apps Script merespons
-
-    $apps_script_response = curl_exec($ch);
-    $curl_error = curl_error($ch);
-    curl_close($ch);
-
-    if ($apps_script_response === false) {
-        error_log("Error syncing tasks from Apps Script: " . $curl_error);
-        return null;
-    } else {
-        $decoded_response = json_decode($apps_script_response, true);
-        if (json_last_error() === JSON_ERROR_NONE && isset($decoded_response['status']) && $decoded_response['status'] === 'success') {
-            return $decoded_response['data'];
-        } else {
-            error_log("Apps Script returned an error or invalid JSON during sync. Response: " . $apps_script_response);
-            return null;
-        }
-    }
-}
-
-// Logika sinkronisasi
-// Ini akan dijalankan saat script diakses (contoh: oleh cron job)
-$tasks = getTasksFromAppsScript();
-
-if ($tasks !== null) {
-    // Simpan data sukses ke file JSON lokal
-    file_put_contents(QUEUE_FILE_PATH, json_encode($tasks, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
-    error_log("Successfully synced tasks from Apps Script.");
-}
-
-// Tambahan: Ini adalah respons HTTP jika file ini diakses langsung dari browser
-// Kita tidak mengharapkan ini, tapi ini untuk memastikan tidak ada output aneh.
+// Beri tahu browser bahwa respons adalah JSON
 header('Content-Type: application/json');
-echo json_encode(['status' => 'success', 'message' => 'Sync script executed. Check your logs.']);
+// Tangani CORS
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: POST, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type');
 
+// Tangani permintaan OPTIONS (preflight request untuk CORS)
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit();
+}
+
+// Periksa apakah metode permintaan adalah POST
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405); // Method Not Allowed
+    echo json_encode(['status' => 'error', 'message' => 'Metode tidak diizinkan.']);
+    exit();
+}
+
+// Ambil input JSON dari body permintaan
+$input = file_get_contents('php://input');
+$requestData = json_decode($input, true);
+
+// Periksa apakah JSON valid dan memiliki key 'data'
+if (json_last_error() !== JSON_ERROR_NONE || !isset($requestData['data'])) {
+    http_response_code(400); // Bad Request
+    echo json_encode(['status' => 'error', 'message' => 'Invalid JSON input. Missing "data" key.']);
+    exit();
+}
+
+$tasksData = $requestData['data'];
+
+// Simpan data ke file JSON lokal.
+// Gunakan JSON_PRETTY_PRINT untuk format yang mudah dibaca.
+// Gunakan JSON_UNESCAPED_SLASHES untuk mencegah escape pada URL.
+if (file_put_contents(QUEUE_FILE_PATH, json_encode($tasksData, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)) !== false) {
+    error_log("Successfully synced tasks from Apps Script.");
+    echo json_encode(['status' => 'success', 'message' => 'Sinkronisasi data berhasil.']);
+} else {
+    error_log("Error: Failed to write tasks to local file " . QUEUE_FILE_PATH);
+    http_response_code(500); // Internal Server Error
+    echo json_encode(['status' => 'error', 'message' => 'Gagal menulis ke file JSON lokal.']);
+}
+
+exit();
 ?>
