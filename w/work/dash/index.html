@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Creative Team Task Tracker</title>
+    <!-- Memuat font Playfair Display dan Plus Jakarta Sans dari Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Plus+Jakarta+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Memuat file CSS utama (path relatif) -->
+    <link rel="stylesheet" href="../style.css">
+    <!-- Font Awesome untuk ikon (hanya jika masih ada ikon yang digunakan, atau bisa dihapus jika tidak ada sama sekali) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Konten Dashboard Utama -->
+        <div id="dashboardContent" class="dashboard-content-wrapper">
+            <div class="top-header-actions">
+                <span class="user-info-text">Halo, <span id="loggedInUsername" class="user-display"></span>!</span>
+                <button id="logoutButton" class="text-button">Logout</button>
+            </div>
+            <h2 class="main-title">Task Dashboard</h2>
+
+            <div class="tabs">
+                <button class="tab-button active" id="allTasksTab">Semua Tugas</button>
+                <button class="tab-button" id="myTasksTab">Tugas Saya</button>
+            </div>
+
+            <div class="action-buttons-row">
+                <button id="addTaskButton" class="button primary-button">Tambah Tugas Baru</button>
+                <button id="generateReportButton" class="button info-button">Generate Daily Report</button>
+            </div>
+
+            <div class="task-table-container">
+                <table class="task-table">
+                    <thead>
+                        <tr>
+                            <th>Proyek</th>
+                            <th>Aktivitas</th>
+                            <th>Platform</th>
+                            <th>Work Status</th>
+                            <th>Approval Status</th>
+                            <th>Catatan</th>
+                            <th>PIC / Tim</th>
+                            <th>Batas Waktu</th>
+                            <th>Prioritas</th>
+                            <th>Lampiran</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="taskTableBody">
+                        <!-- Data tugas akan dimuat di sini oleh JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Bagian Form Tambah/Edit Tugas (Akan ditampilkan/disembunyikan) -->
+        <div id="taskFormSection" class="task-form-section" style="display: none;">
+            <h3 id="modalTitle" class="form-section-title">Tambah Tugas Baru</h3>
+            <form id="taskForm">
+                <input type="hidden" id="taskId"> <!-- Untuk menyimpan Task ID saat edit -->
+
+                <div class="form-group">
+                    <label for="projectName">Nama Proyek:</label>
+                    <input type="text" id="projectName" class="input-field" placeholder="Otomatis jika kosong">
+                </div>
+                <div class="form-group">
+                    <label for="activity">Aktivitas / Tugas:</label>
+                    <input type="text" id="activity" class="input-field" required>
+                </div>
+                <div class="form-group">
+                    <label for="platform">Platform:</label>
+                    <select id="platform" class="select-field" multiple size="5"> <!-- Multiple selection -->
+                        <option value="All Social Media">All Social Media</option>
+                        <option value="Media Cetak">Media Cetak</option>
+                        <option value="IG Reels">IG Reels</option>
+                        <option value="TikTok">TikTok</option>
+                        <option value="YouTube Short">YouTube Short</option>
+                        <option value="TV Display">TV Display</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group" id="otherPlatformGroup" style="display: none;">
+                    <label for="otherPlatformInput">Platform Lainnya (Opsional):</label>
+                    <input type="text" id="otherPlatformInput" class="input-field" placeholder="Cth: Website Banner, Billboard">
+                </div>
+
+                <div class="form-group">
+                    <label for="workStatus">Work Status:</label>
+                    <select id="workStatus" class="select-field">
+                        <option value="Editing">Editing</option>
+                        <option value="Take Konten">Take Konten</option>
+                        <option value="Final Touch">Final Touch</option>
+                        <option value="On Hold">On Hold</option>
+                    </select>
+                </div>
+                <div class="form-group" id="finalTouchProgressGroup" style="display: none;">
+                    <label for="finalTouchProgress">Presentase Final Touch: <span id="finalTouchProgressValue">0</span>%</label>
+                    <input type="range" id="finalTouchProgress" class="slider-field" min="0" max="100" value="0">
+                </div>
+
+                <div class="form-group">
+                    <label for="approvalStatus">Approval Status:</label>
+                    <select id="approvalStatus" class="select-field">
+                        <option value="Approved">Approved</option>
+                        <option value="To Be Announced (TBA)">To Be Announced (TBA)</option>
+                        <option value="Revised">Revised</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="notes">Catatan:</label>
+                    <textarea id="notes" class="textarea-field"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="picTeam">PIC / Tim:</label>
+                    <select id="picTeam" class="select-field" multiple size="4" required> <!-- Multiple selection -->
+                        <option value="Antony">Antony</option>
+                        <option value="Tian">Tian</option>
+                        <option value="Steven">Steven</option>
+                        <option value="Mutia">Mutia</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="deadline">Batas Waktu:</label>
+                    <input type="date" id="deadline" class="input-field">
+                </div>
+                <div class="form-group">
+                    <label for="priority">Prioritas:</label>
+                    <select id="priority" class="select-field">
+                        <option value="Low">Low</option>
+                        <option value="Medium">Medium</option>
+                        <option value="High">High</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="attachmentLink">Tautan Lampiran:</label>
+                    <input type="url" id="attachmentLink" class="input-field" placeholder="URL atau link Google Drive">
+                </div>
+
+                <div class="modal-buttons">
+                    <button type="submit" class="button success-button">Simpan Tugas</button>
+                    <button type="button" class="button secondary-button" id="cancelTaskButton">Batal</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer id="mainFooter">
+        <div class="footer-content">
+            <div class="footer-links-left">
+                <span id="setPinDashboardText" class="footer-link">Atur/Ubah PIN</span>
+                <span class="footer-divider">|</span>
+                <span id="archiveTasksText" class="footer-link">Arsip Tugas</span>
+            </div>
+            <div class="footer-info-right">
+                <!-- Konten tambahan di kanan footer jika diperlukan -->
+            </div>
+        </div>
+    </footer>
+
+    <!-- Modal Set/Change PIN dari Dashboard (Masih Modal) -->
+    <div id="setPinDashboardModal" class="modal-overlay">
+        <div class="modal-content">
+            <button class="close-button" id="closePinDashboardModalButton">&times;</button>
+            <h3>Atur / Ubah PIN Anda</h3>
+            <p>Kosongkan PIN untuk menghapusnya.</p>
+            <div class="form-group">
+                <label for="dashboardNewPin">PIN Baru (4 digit, opsional):</label>
+                <input type="password" id="dashboardNewPin" class="input-field" minlength="4" maxlength="4">
+            </div>
+            <div class="modal-buttons">
+                <button id="saveDashboardPinButton" class="button success-button">Simpan PIN</button>
+                <button id="cancelDashboardPinButton" class="button secondary-button">Batal</button>
+            </div>
+            <p id="dashboardPinErrorMessage" class="error-message"></p>
+        </div>
+    </div>
+
+    <!-- Modal Arsip Tugas (Popup) -->
+    <div id="archiveListModal" class="modal-overlay">
+        <div class="modal-content">
+            <button class="close-button" id="closeArchiveListModalButton">&times;</button>
+            <h3>Tugas yang Diarsipkan</h3>
+            <div id="archivedProjectsList">
+                <!-- Daftar proyek yang diarsipkan akan dimuat di sini -->
+                <p style="text-align: center; color: var(--color-text-secondary);">Memuat daftar arsip...</p>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        Memuat data...
+    </div>
+
+    <!-- Memuat file JavaScript untuk logika dashboard -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

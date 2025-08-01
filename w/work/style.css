@@ -1,0 +1,779 @@
+/* File: public_html/w/work/style.css */
+/* Deskripsi: Styling utama untuk aplikasi Creative Team Task Tracker.
+   Menerapkan gaya Neobrutalism berdasarkan repositori dailish-raw. */
+
+/* Variabel CSS Global (Diambil dari dailish-raw/dailish/css/base.css) */
+:root {
+    --color-primary: #e60023; /* Pinterest Red */
+    --color-dark: #111; /* Dark text, primary hover, main border */
+    --color-text-main: #333; /* Main text color */
+    --color-text-secondary: #5f5f5f; /* Secondary text, icon buttons */
+    --color-text-light: #767676; /* Search icon, profile icon, info message */
+    --color-background-light: #f9f9f9; /* Body background, overlay background */
+    --color-background-lighter: #efefef; /* Search input background */
+    --color-background-lightest: #e9e9e9; /* Nav button hover, icon button hover */
+    --color-white: #ffffff; /* White */
+    --color-border-light: #eee; /* Search suggestions border, notification item border */
+    --color-border-medium: #ddd; /* Login form input border, dashed line */
+    --color-hover-light: #f0f0f0; /* Search suggestions hover, dropdown hover */
+    --color-success: #28a745; /* Green for success alerts */
+    --color-error: #dc3545; /* Red for error alerts */
+    --color-accent-hover: #ad081b; /* Darker red for hover states of primary elements */
+    --color-grey-button: #555; /* Admin logout button, manual toggle button */
+    --color-grey-button-hover: #777; /* Admin logout button hover */
+    --color-e0e0e0: #e0e0e0; /* Specific light grey */
+    --color-focus-border: #80bdff; /* Input focus border - disesuaikan untuk neobrutalism */
+    --color-focus-shadow: rgba(0, 123, 255, 0.25); /* Input focus shadow - disesuaikan */
+    --color-dashed-line: #ccc; /* Warna garis putus-putus untuk input */
+
+    /* Font Families */
+    --font-family-body: 'Plus Jakarta Sans', sans-serif;
+    --font-family-heading: 'Playfair Display', serif;
+
+    /* Base Font Sizes and Line Heights */
+    --font-size-base: 16px;
+    --line-height-base: 1.5; /* Disesuaikan untuk Neobrutalism */
+}
+
+/* Import Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap');
+
+/* Simple CSS Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Gaya dasar untuk body */
+body {
+    font-family: var(--font-family-body);
+    font-size: var(--font-size-base);
+    line-height: var(--line-height-base);
+    background-color: var(--color-background-light);
+    color: var(--color-text-main);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 100vh;
+    padding: 20px;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Kontainer utama (sesuai create-pin-container dari contoh Tian) */
+.container {
+    background-color: var(--color-white);
+    padding: 30px;
+    border: 2px solid var(--color-dark); /* Border kuat khas Neobrutalism */
+    border-radius: 8px; /* Sedikit rounded corner */
+    box-shadow: 4px 4px 0px var(--color-dark); /* Bayangan solid khas Neobrutalism */
+    width: 100%;
+    max-width: 900px;
+    text-align: center;
+    margin: 0 auto;
+    flex-grow: 1;
+}
+
+.main-title {
+    font-family: var(--font-family-heading);
+    font-size: 25px;
+    color: var(--color-dark);
+    margin-bottom: 30px;
+    text-align: left;
+}
+
+/* --- Styling untuk Halaman Login --- */
+.login-box {
+    max-width: 400px;
+    margin: 40px auto;
+    padding: 30px;
+    background-color: var(--color-white);
+    border: 2px solid var(--color-dark);
+    border-radius: 8px;
+    box-shadow: 4px 4px 0px var(--color-dark);
+}
+
+.login-box h2 {
+    font-family: var(--font-family-heading);
+    font-size: 1.8em;
+    color: var(--color-dark);
+    margin-bottom: 25px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: var(--color-text-main);
+}
+
+/* Styling input dengan border solid dan bayangan kecil */
+.input-field,
+.select-field,
+.textarea-field {
+    width: 100%;
+    padding: 10px 12px;
+    border: 2px solid var(--color-dark);
+    background-color: var(--color-white);
+    border-radius: 4px;
+    font-family: var(--font-family-body);
+    font-size: 1em;
+    color: var(--color-text-main);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    min-width: 150px;
+    outline: none;
+    box-shadow: 2px 2px 0px var(--color-dark);
+}
+
+.input-field:focus,
+.select-field:focus,
+.textarea-field:focus {
+    border-color: var(--color-primary);
+    box-shadow: 3px 3px 0px var(--color-primary);
+}
+
+.textarea-field {
+    min-height: 80px;
+    resize: vertical;
+}
+
+/* Styling untuk slider (range input) */
+.slider-field {
+    width: 100%;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 8px;
+    background: var(--color-border-medium);
+    outline: none;
+    border-radius: 4px;
+    transition: opacity .2s;
+    margin-top: 10px;
+}
+
+.slider-field:hover {
+    opacity: 1;
+}
+
+.slider-field::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--color-primary);
+    cursor: pointer;
+    border: 2px solid var(--color-dark);
+    box-shadow: 2px 2px 0px var(--color-dark);
+}
+
+.slider-field::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--color-primary);
+    cursor: pointer;
+    border: 2px solid var(--color-dark);
+    box-shadow: 2px 2px 0px var(--color-dark);
+}
+
+
+/* Gaya Tombol Umum (Neobrutalism style) */
+.button {
+    padding: 12px 20px;
+    border: 2px solid var(--color-dark);
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: var(--font-family-body);
+    font-size: 1em;
+    font-weight: 700;
+    transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    margin: 5px;
+    box-shadow: 3px 3px 0px var(--color-dark);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.button:active {
+    transform: translate(2px, 2px);
+    box-shadow: 1px 1px 0px var(--color-dark);
+}
+
+.primary-button {
+    background-color: var(--color-primary);
+    color: var(--color-white);
+}
+
+.primary-button:hover {
+    background-color: var(--color-accent-hover);
+}
+
+.secondary-button {
+    background-color: var(--color-background-lighter);
+    color: var(--color-text-main);
+}
+
+.secondary-button:hover {
+    background-color: var(--color-hover-light);
+}
+
+.success-button {
+    background-color: var(--color-success);
+    color: var(--color-white);
+}
+
+.success-button:hover {
+    background-color: #218838;
+}
+
+.danger-button {
+    background-color: var(--color-error);
+    color: var(--color-white);
+}
+
+.danger-button:hover {
+    background-color: #c82333;
+}
+
+.info-button {
+    background-color: #17a2b8;
+    color: var(--color-white);
+    border: 2px solid var(--color-dark);
+    box-shadow: 3px 3px 0px var(--color-dark);
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 0.9em;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+}
+
+.info-button:hover {
+    background-color: #138496;
+    transform: translateY(-1px);
+    box-shadow: 2px 2px 0px var(--color-dark);
+}
+.info-button:active {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0px var(--color-dark);
+}
+
+
+.error-message {
+    color: var(--color-error);
+    font-size: 0.9em;
+    margin-top: 15px;
+    text-align: center;
+}
+
+/* --- Styling untuk Halaman Dashboard --- */
+.dashboard-content-wrapper {
+    display: block;
+    transition: opacity 0.3s ease, visibility 0.3s ease, height 0.3s ease;
+}
+
+.dashboard-content-wrapper.hidden {
+    opacity: 0;
+    visibility: hidden;
+    height: 0;
+    overflow: hidden;
+    padding: 0;
+    margin: 0;
+}
+
+.task-form-section {
+    display: none;
+    background-color: var(--color-white);
+    border: 2px solid var(--color-dark);
+    border-radius: 8px;
+    box-shadow: 4px 4px 0px var(--color-dark);
+    padding: 30px;
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    text-align: left;
+}
+
+.form-section-title {
+    font-family: var(--font-family-heading);
+    font-size: 1.6em;
+    color: var(--color-dark);
+    margin-bottom: 25px;
+    text-align: center;
+}
+
+.top-header-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 10px;
+    gap: 10px;
+}
+
+.user-info-text {
+    font-weight: 500;
+    color: var(--color-text-secondary);
+}
+
+.text-button {
+    background: none;
+    border: none;
+    color: var(--color-primary);
+    cursor: pointer;
+    font-family: var(--font-family-body);
+    font-size: 1em;
+    text-decoration: underline;
+    padding: 0;
+    transition: color 0.2s ease;
+}
+.text-button:hover {
+    color: var(--color-accent-hover);
+}
+
+
+.tabs {
+    display: flex;
+    margin-bottom: 20px;
+    border-bottom: 2px solid var(--color-e0e0e0);
+}
+
+.tab-button {
+    padding: 12px 20px;
+    border: none;
+    background-color: transparent;
+    cursor: pointer;
+    font-family: var(--font-family-body);
+    font-size: 1em;
+    font-weight: 500;
+    color: var(--color-text-main);
+    border-bottom: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.tab-button.active {
+    color: var(--color-primary);
+    border-bottom-color: var(--color-primary);
+    font-weight: 700;
+}
+
+.tab-button:hover:not(.active) {
+    color: var(--color-accent-hover);
+    background-color: var(--color-background-lightest);
+}
+
+.action-buttons-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    justify-content: flex-start;
+    /* Perbaikan: Atur flex-wrap: nowrap dan flex-shrink untuk tampilan satu baris tanpa scroll */
+    flex-wrap: nowrap;
+    
+    /* Untuk tampilan satu baris di iPad */
+    align-items: center; 
+    
+    /* Tambahkan media query untuk mengatasi tampilan mobile yang sangat kecil */
+    @media (max-width: 480px) {
+        flex-wrap: wrap; /* Kembali wrap di mobile kecil */
+    }
+}
+
+.add-task-button, .generate-report-button {
+    flex-shrink: 0;
+    width: auto;
+    margin: 0;
+}
+
+/* Table Styling */
+.task-table-container {
+    overflow-x: auto;
+    margin-top: 20px;
+}
+
+.task-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+    min-width: 800px;
+    border: 2px solid var(--color-dark);
+    box-shadow: 4px 4px 0px var(--color-dark);
+}
+
+.task-table th,
+.task-table td {
+    border: 1px solid var(--color-dark);
+    padding: 12px 15px;
+    text-align: left;
+    vertical-align: top;
+}
+
+.task-table th {
+    background-color: var(--color-background-lighter);
+    font-weight: 700;
+    color: var(--color-text-main);
+    white-space: nowrap;
+}
+
+.task-table tr:nth-child(even) {
+    background-color: var(--color-background-light);
+}
+
+.task-table tr:hover {
+    background-color: var(--color-hover-light);
+}
+
+.task-table td.actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    padding: 8px;
+    align-items: flex-start;
+}
+
+/* Status Badges (Neobrutalism style) */
+.status-badge {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 0.85em;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--color-white);
+    text-align: center;
+    min-width: 90px;
+    border: 1px solid var(--color-dark);
+    box-shadow: 2px 2px 0px var(--color-dark);
+}
+
+.status-badge.editing { background-color: #007bff; }
+.status-badge.take-konten { background-color: #17a2b8; }
+.status-badge.final-touch { background-color: #6f42c1; }
+.status-badge.on-hold { background-color: #ffc107; color: var(--color-text-main); }
+
+.status-badge.approved { background-color: var(--color-success); }
+.status-badge.to-be-announced { background-color: #6c757d; }
+.status-badge.revised { background-color: var(--color-error); }
+.status-badge.archived { background-color: var(--color-grey-button); } /* Warna untuk archived */
+
+
+/* Priority Badges (Neobrutalism style) */
+.priority-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 0.8em;
+    font-weight: 600;
+    color: var(--color-white);
+    text-align: center;
+    border: 1px solid var(--color-dark);
+    box-shadow: 1px 1px 0px var(--color-dark);
+}
+.priority-badge.high { background-color: var(--color-error); }
+.priority-badge.medium { background-color: #ffc107; color: var(--color-text-main); }
+.priority-badge.low { background-color: var(--color-success); }
+
+
+/* Modal Styling (hanya untuk setPinDashboardModal dan archiveListModal sekarang) */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.modal-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal-content {
+    background-color: var(--color-white);
+    padding: 30px;
+    border-radius: 10px;
+    border: 2px solid var(--color-dark);
+    box-shadow: 6px 6px 0px var(--color-dark);
+    width: 90%;
+    max-width: 600px;
+    transform: translateY(-20px);
+    transition: transform 0.3s ease;
+    position: relative;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-overlay.active .modal-content {
+    transform: translateY(0);
+}
+
+.modal-content h3 {
+    font-family: var(--font-family-heading);
+    font-size: 1.6em;
+    color: var(--color-dark);
+    margin-bottom: 25px;
+    text-align: center;
+}
+
+.modal-content .form-group {
+    margin-bottom: 15px;
+}
+
+.modal-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 25px;
+}
+
+.close-button {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: none;
+    border: none;
+    font-size: 1.8em;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    line-height: 1;
+    padding: 5px;
+    transition: color 0.2s ease;
+}
+
+.close-button:hover {
+    color: var(--color-dark);
+}
+
+/* Loading Overlay */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1001;
+    font-size: 1.5em;
+    color: var(--color-primary);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.loading-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Footer Styling */
+footer {
+    background-color: transparent;
+    padding: 0;
+    text-align: center;
+    border-top: none;
+    margin-top: 20px;
+    width: auto;
+    max-width: 900px;
+    margin-left: auto;
+    margin-right: auto;
+    transition: opacity 0.3s ease, visibility 0.3s ease, height 0.3s ease;
+}
+
+footer.hidden {
+    opacity: 0;
+    visibility: hidden;
+    height: 0;
+    overflow: hidden;
+    padding: 0;
+    margin: 0;
+}
+
+.footer-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-top: none;
+    box-shadow: none;
+    background-color: transparent;
+    padding: 0;
+    border-radius: 0;
+}
+
+.footer-links-left {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+.footer-link {
+    color: var(--color-primary);
+    cursor: pointer;
+    text-decoration: underline;
+    font-weight: 500;
+    transition: color 0.2s ease;
+}
+
+.footer-link:hover {
+    color: var(--color-accent-hover);
+}
+
+.footer-divider {
+    color: var(--color-text-light);
+}
+
+/* Styling untuk daftar arsip di modal */
+#archivedProjectsList ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+#archivedProjectsList li {
+    padding: 8px 0;
+    border-bottom: 1px dashed var(--color-dashed-line);
+    text-align: left;
+    color: var(--color-text-main);
+}
+
+#archivedProjectsList li:last-child {
+    border-bottom: none;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .main-title {
+        font-size: 2em;
+    }
+
+    .container {
+        padding: 20px;
+    }
+
+    .top-header-actions {
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 5px;
+    }
+
+    .header-dashboard {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+
+    .header-dashboard h2 {
+        font-size: 1.5em;
+    }
+
+    .tabs {
+        flex-wrap: wrap;
+    }
+
+    .tab-button {
+        flex: 1 1 auto;
+        text-align: center;
+        padding: 10px;
+    }
+
+    .action-buttons-row {
+        flex-direction: row; /* Tetap satu baris di tablet */
+        flex-wrap: nowrap; /* Mencegah wrap */
+        justify-content: center; /* Pusatkan tombol */
+        overflow-x: auto; /* Tambahkan scroll jika tombol terlalu banyak */
+    }
+
+    .add-task-button, .generate-report-button {
+        min-width: 150px; /* Sesuaikan sesuai kebutuhan */
+        flex-grow: 1;
+        flex-shrink: 0;
+    }
+
+    .task-table th,
+    .task-table td {
+        padding: 10px;
+        font-size: 0.9em;
+    }
+
+    .modal-content {
+        padding: 20px;
+    }
+
+    .modal-content h3 {
+        font-size: 1.4em;
+    }
+
+    .task-form-section {
+        padding: 20px;
+    }
+
+    .form-section-title {
+        font-size: 1.4em;
+    }
+
+    footer .footer-content {
+        flex-direction: row;
+        justify-content: space-between;
+        gap: 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    body {
+        padding: 10px;
+    }
+    .container {
+        padding: 15px;
+    }
+    .main-title {
+        font-size: 1.8em;
+    }
+
+    .login-box {
+        margin: 20px auto;
+        padding: 15px;
+    }
+
+    .button {
+        width: 100%;
+        margin: 5px 0;
+    }
+
+    .modal-buttons {
+        flex-direction: column;
+    }
+    footer {
+        padding: 0;
+    }
+    .footer-content {
+        padding: 5px 0;
+        flex-direction: column;
+        gap: 10px;
+    }
+    .action-buttons-row {
+        flex-direction: column;
+    }
+}

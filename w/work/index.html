@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Creative Team Task Tracker</title>
+    <!-- Memuat font Playfair Display dan Plus Jakarta Sans dari Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Plus+Jakarta+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Memuat file CSS utama -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1 class="main-title">Creative Team Task Tracker</h1>
+        <div class="login-box">
+            <h2>Login</h2>
+            <div class="form-group">
+                <label for="username">Nama Pengguna:</label>
+                <select id="username" class="input-field">
+                    <option value="">Pilih Nama</option>
+                    <option value="Antony">Antony</option>
+                    <option value="Tian">Tian</option>
+                    <option value="Steven">Steven</option>
+                    <option value="Mutia">Mutia</option>
+                </select>
+            </div>
+            <div class="form-group" id="pinInputGroup" style="display: none;">
+                <label for="pin">PIN:</label>
+                <input type="password" id="pin" class="input-field" placeholder="Masukkan PIN Anda" minlength="4" maxlength="4">
+            </div>
+            <button id="loginButton" class="button primary-button">Login</button>
+            <p id="errorMessage" class="error-message"></p>
+        </div>
+
+        <!-- Modal untuk Set PIN Pertama Kali -->
+        <div id="setPinModal" class="modal-overlay">
+            <div class="modal-content">
+                <h3>Atur PIN Anda</h3>
+                <p>Ini adalah login pertama Anda. Anda dapat mengatur PIN untuk keamanan tambahan.</p>
+                <div class="form-group">
+                    <label for="newPin">PIN Baru (4 digit):</label>
+                    <input type="password" id="newPin" class="input-field" minlength="4" maxlength="4">
+                </div>
+                <div class="modal-buttons">
+                    <button id="savePinButton" class="button success-button">Simpan PIN</button>
+                    <button id="skipPinButton" class="button secondary-button">Lewati</button>
+                </div>
+                <p id="pinErrorMessage" class="error-message"></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // File JavaScript untuk logika login
+        const pinManagerUrl = 'pin_manager.php'; // Path ke file pin_manager.php
+        const SESSION_KEY = 'loggedInUser';
+        const SESSION_DURATION_MS = 12 * 60 * 60 * 1000; // 12 jam dalam milidetik
+
+        const loginButton = document.getElementById('loginButton');
+        const usernameSelect = document.getElementById('username');
+        const pinInputGroup = document.getElementById('pinInputGroup');
+        const pinInput = document.getElementById('pin');
+        const errorMessage = document.getElementById('errorMessage');
+        const setPinModal = document.getElementById('setPinModal');
+        const newPinInput = document.getElementById('newPin');
+        const savePinButton = document.getElementById('savePinButton');
+        const skipPinButton = document.getElementById('skipPinButton');
+        const pinErrorMessage = document.getElementById('pinErrorMessage');
+
+        let allUsersData = []; // Akan menyimpan data pengguna dari pin_manager.php
+
+        // Fungsi untuk memuat data pengguna dari pin_manager.php
+        async function loadUsers() {
+            try {
+                const response = await fetch(pinManagerUrl);
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`HTTP error! status: ${response.status}. Response: ${errorText}`);
+                }
+                const result = await response.json();
+                if (result.status === 'success') {
+                    allUsersData = result.data;
+                    return result.data;
+                } else {
+                    throw new Error(result.message || 'Gagal memuat data pengguna.');
+                }
+            } catch (error) {
+                console.error('Error loading users:', error);
+                errorMessage.textContent = 'Gagal memuat data pengguna. Silakan coba lagi. Detail: ' + error.message;
+                return [];
+            }
+        }
+
+        // Fungsi untuk memperbarui data pengguna via pin_manager.php
+        async function updateUserData(username, pin, firstLoginDone) {
+            try {
+                const response = await fetch(pinManagerUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        action: 'updatePin',
+                        username: username,
+                        pin: pin,
+                        firstLoginDone: firstLoginDone
+                    })
+                });
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`HTTP error! status: ${response.status}. Response: ${errorText}`);
+                }
+                const result = await response.json();
+                if (result.status === 'success') {
+                    return true;
+                } else {
+                    throw new Error(result.message || 'Gagal memperbarui data pengguna.');
+                }
+            } catch (error) {
+                console.error('Error updating user data:', error);
+                return false;
+            }
+        }
+
+        // Event listener untuk perubahan pilihan username
+        usernameSelect.addEventListener('change', async () => {
+            const selectedUsername = usernameSelect.value;
+            pinInput.value = ''; // Bersihkan input PIN
+            errorMessage.textContent = ''; // Bersihkan pesan error
+
+            if (selectedUsername) {
+                await loadUsers(); // Muat ulang data user jika belum ada atau untuk memastikan terbaru
+                const user = allUsersData.find(u => u.name === selectedUsername);
+                if (user && user.pin) {
+                    pinInputGroup.style.display = 'block'; // Tampilkan input PIN jika user punya PIN
+                    pinInput.setAttribute('required', 'true');
+                } else {
+                    pinInputGroup.style.display = 'none'; // Sembunyikan jika tidak punya PIN
+                    pinInput.removeAttribute('required');
+                }
+            } else {
+                pinInputGroup.style.display = 'none';
+                pinInput.removeAttribute('required');
+            }
+        });
+
+        // Fungsi untuk menangani proses login
+        loginButton.addEventListener('click', async () => {
+            const username = usernameSelect.value;
+            const pin = pinInput.value;
+            errorMessage.textContent = ''; // Hapus pesan error sebelumnya
+
+            if (!username) {
+                errorMessage.textContent = 'Nama pengguna harus diisi.';
+                return;
+            }
+
+            await loadUsers(); // Pastikan data users terbaru
+            const foundUser = allUsersData.find(user => user.name === username);
+
+            if (!foundUser) {
+                errorMessage.textContent = 'Nama pengguna tidak valid.';
+                return;
+            }
+
+            if (foundUser.pin && foundUser.pin !== pin) {
+                errorMessage.textContent = 'PIN salah.';
+                return;
+            }
+
+            if (!foundUser.pin && pin) { // Jika user tidak punya PIN tapi input PIN diisi
+                 errorMessage.textContent = 'Pengguna ini tidak memiliki PIN. Kosongkan kolom PIN atau atur PIN Anda.';
+                 return;
+            }
+
+            // Login berhasil
+            // Cek apakah ini login pertama kali dan perlu set PIN
+            if (!foundUser.firstLoginDone) {
+                setPinModal.classList.add('active');
+                localStorage.setItem('tempUserForPinSetup', username); // Simpan sementara username
+            } else {
+                // Langsung masuk dashboard
+                finalizeLogin(username);
+            }
+        });
+
+        // Simpan PIN baru
+        savePinButton.addEventListener('click', async () => {
+            const username = localStorage.getItem('tempUserForPinSetup');
+            const newPin = newPinInput.value;
+            pinErrorMessage.textContent = '';
+
+            if (!newPin || newPin.length !== 4 || !/^\d+$/.test(newPin)) {
+                pinErrorMessage.textContent = 'PIN harus 4 digit angka.';
+                return;
+            }
+
+            const success = await updateUserData(username, newPin, true);
+            if (success) {
+                setPinModal.classList.remove('active');
+                localStorage.removeItem('tempUserForPinSetup');
+                finalizeLogin(username);
+            } else {
+                pinErrorMessage.textContent = 'Gagal menyimpan PIN. Coba lagi.';
+            }
+        });
+
+        // Lewati pengaturan PIN
+        skipPinButton.addEventListener('click', async () => {
+            const username = localStorage.getItem('tempUserForPinSetup');
+            const success = await updateUserData(username, null, true); // PIN tetap null, tapi firstLoginDone jadi true
+            if (success) {
+                setPinModal.classList.remove('active');
+                localStorage.removeItem('tempUserForPinSetup');
+                finalizeLogin(username);
+            } else {
+                pinErrorMessage.textContent = 'Gagal melewati pengaturan PIN. Coba lagi.';
+            }
+        });
+
+        // Fungsi untuk menyelesaikan proses login dan redirect
+        function finalizeLogin(username) {
+            const sessionData = {
+                username: username,
+                loginTime: new Date().getTime()
+            };
+            localStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
+
+            // Redirect ke halaman dashboard
+            window.location.href = 'dash/index.html';
+        }
+
+        // Mengizinkan login dengan menekan Enter pada input PIN
+        pinInput.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                loginButton.click();
+            }
+        });
+        newPinInput.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                savePinButton.click();
+            }
+        });
+
+        // Cek jika sudah login, langsung redirect ke dashboard (untuk mencegah user kembali ke login page)
+        window.onload = async function() {
+            const storedSession = localStorage.getItem(SESSION_KEY);
+            if (storedSession) {
+                const sessionData = JSON.parse(storedSession);
+                const currentTime = new Date().getTime();
+
+                if (currentTime - sessionData.loginTime < SESSION_DURATION_MS) {
+                    // Sesi masih aktif, perbarui waktu login untuk memperpanjang sesi
+                    sessionData.loginTime = currentTime;
+                    localStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
+                    window.location.href = 'dash/index.html';
+                } else {
+                    // Sesi kadaluarsa, hapus sesi
+                    localStorage.removeItem(SESSION_KEY);
+                }
+            }
+            // Muat data user awal untuk menampilkan atau menyembunyikan input PIN
+            await loadUsers();
+            usernameSelect.dispatchEvent(new Event('change')); // Trigger change event untuk update tampilan PIN input
+        };
+    </script>
+</body>
+</html>

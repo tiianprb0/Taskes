@@ -1,0 +1,36 @@
+[31-Jul-2025 11:51:41 Asia/Jakarta] Error decoding users.json: Syntax error
+[31-Jul-2025 11:51:44 Asia/Jakarta] Error decoding users.json: Syntax error
+[31-Jul-2025 11:51:45 Asia/Jakarta] Error decoding users.json: Syntax error
+[31-Jul-2025 11:52:28 Asia/Jakarta] Error decoding users.json: Syntax error
+[31-Jul-2025 11:52:34 Asia/Jakarta] Error decoding users.json: Syntax error
+[31-Jul-2025 11:52:34 Asia/Jakarta] Error decoding users.json: Syntax error
+[31-Jul-2025 11:52:38 Asia/Jakarta] Error decoding users.json: Syntax error
+[31-Jul-2025 11:52:38 Asia/Jakarta] Error decoding users.json: Syntax error
+[31-Jul-2025 11:52:39 Asia/Jakarta] Error decoding users.json: Syntax error
+[31-Jul-2025 11:53:59 Asia/Jakarta] Error decoding users.json: Syntax error Content: // File: public_html/w/work/users.json
+// Deskripsi: Menyimpan daftar pengguna, PIN mereka (opsional), dan status login pertama kali.
+// 'pin': Null jika belum diatur, string jika sudah diatur.
+// 'firstLoginDone': true jika pengguna sudah melewati atau mengatur PIN di login pertama kali.
+[
+  {
+    "name": "Antony",
+    "pin": null,
+    "firstLoginDone": false
+  },
+  {
+    "name": "Tian",
+    "pin": null,
+    "firstLoginDone": false
+  },
+  {
+    "name": "Steven",
+    "pin": null,
+    "firstLoginDone": false
+  },
+  {
+    "name": "Mutia",
+    "pin": null,
+    "firstLoginDone": false
+  }
+]
+
