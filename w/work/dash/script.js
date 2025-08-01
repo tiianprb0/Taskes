@@ -1,6 +1,7 @@
 // File: public_html/w/work/dash/script.js
 // Deskripsi: Logika JavaScript untuk halaman dashboard Task Tracker.
 // Perbaikan: Menambahkan logika untuk fitur archive, restore, dan status "Done" baru.
+// Perbaikan: Menambahkan fitur upload gambar atau URL dan menampilkan gambar di laporan PDF.
 
 // --- KONSTANTA ---
 // Ganti dengan URL proxy PHP baru Anda
@@ -44,7 +45,17 @@ const notesInput = document.getElementById('notes');
 const picTeamSelect = document.getElementById('picTeam');
 const deadlineInput = document.getElementById('deadline');
 const prioritySelect = document.getElementById('priority');
+
+// NEW: Attachment DOM elements
+const attachmentTypeRadios = document.querySelectorAll('input[name="attachment-type"]');
+const attachmentUploadGroup = document.getElementById('attachment-upload-group');
+const attachmentUrlGroup = document.getElementById('attachment-url-group');
+const attachmentFileInput = document.getElementById('attachmentFile');
 const attachmentLinkInput = document.getElementById('attachmentLink');
+const imagePreviewContainer = document.getElementById('image-preview-container');
+const imagePreview = document.getElementById('image-preview');
+const removeImageButton = document.getElementById('remove-image-button');
+
 
 // Elemen modal Set/Change PIN dari Dashboard
 const setPinDashboardModal = document.getElementById('setPinDashboardModal');
@@ -204,6 +215,18 @@ function renderTasks() {
         if (task['Work Status'] === 'Final Touch' && task['Progress (%)']) {
             workStatusDisplay = `Final Touch (${task['Progress (%)']}%)`;
         }
+        
+        // NEW: Check if attachment is a Base64 image or a URL
+        let attachmentContent = '-';
+        if (task['Attachment Link']) {
+            if (task['Attachment Link'].startsWith('data:image/')) {
+                // It's a Base64 image
+                attachmentContent = `<a href="${task['Attachment Link']}" target="_blank" class="info-button" style="text-decoration: none; padding: 5px 10px; font-size: 0.8em;">Lihat Gambar</a>`;
+            } else {
+                // It's a URL
+                attachmentContent = `<a href="${task['Attachment Link']}" target="_blank" class="info-button" style="text-decoration: none; padding: 5px 10px; font-size: 0.8em;">Lihat Tautan</a>`;
+            }
+        }
 
 
         row.innerHTML = `
@@ -216,7 +239,7 @@ function renderTasks() {
             <td>${formatMultiSelectDisplay(task['PIC / Team'])}</td>
             <td>${task['Deadline'] || '-'}</td>
             <td><span class="priority-badge ${getPriorityBadgeClass(task['Priority'])}">${task['Priority'] || '-'}</span></td>
-            <td>${task['Attachment Link'] ? `<a href="${task['Attachment Link']}" target="_blank" class="info-button" style="text-decoration: none; padding: 5px 10px; font-size: 0.8em;">Lihat</a>` : '-'}</td>
+            <td>${attachmentContent}</td>
             <td class="actions">
                 <button class="button secondary-button edit-button" data-task-id="${task['Task ID']}">Edit</button>
                 ${task['Work Status'] !== 'Archived' ? `<button class="button danger-button archive-button" data-task-id="${task['Task ID']}">Archive</button>` : ''}
@@ -240,6 +263,12 @@ function showTaskForm(taskData = null) {
     finalTouchProgressGroup.style.display = 'none';
     otherPlatformGroup.style.display = 'none';
     otherPlatformInput.value = '';
+    
+    // NEW: Hide image preview by default
+    imagePreviewContainer.style.display = 'none';
+    imagePreview.src = '#';
+    attachmentFileInput.value = '';
+    attachmentLinkInput.value = '';
 
     dashboardContent.classList.add('hidden');
     mainFooter.classList.add('hidden');
@@ -253,7 +282,30 @@ function showTaskForm(taskData = null) {
         notesInput.value = taskData['Notes'] || '';
         deadlineInput.value = taskData['Deadline'] ? new Date(taskData['Deadline']).toISOString().split('T')[0] : '';
         prioritySelect.value = taskData['Priority'] || 'Low';
-        attachmentLinkInput.value = taskData['Attachment Link'] || '';
+        
+        // NEW: Handle attachment data
+        const attachmentLink = taskData['Attachment Link'] || '';
+        if (attachmentLink.startsWith('data:image/')) {
+            // It's a Base64 image
+            document.querySelector('input[name="attachment-type"][value="upload"]').checked = true;
+            attachmentUploadGroup.style.display = 'block';
+            attachmentUrlGroup.style.display = 'none';
+            imagePreview.src = attachmentLink;
+            imagePreviewContainer.style.display = 'flex';
+        } else if (attachmentLink.startsWith('http')) {
+            // It's a URL
+            document.querySelector('input[name="attachment-type"][value="url"]').checked = true;
+            attachmentUploadGroup.style.display = 'none';
+            attachmentUrlGroup.style.display = 'block';
+            attachmentLinkInput.value = attachmentLink;
+            imagePreview.src = attachmentLink;
+            imagePreviewContainer.style.display = 'flex';
+        } else {
+            // No attachment
+            document.querySelector('input[name="attachment-type"][value="upload"]').checked = true;
+            attachmentUploadGroup.style.display = 'block';
+            attachmentUrlGroup.style.display = 'none';
+        }
 
         workStatusSelect.value = taskData['Work Status'] || 'Editing';
         if (workStatusSelect.value === 'Final Touch') {
@@ -303,6 +355,11 @@ function showTaskForm(taskData = null) {
             option.selected = (option.value === currentLoggedInUser);
         });
         Array.from(platformSelect.options).forEach(option => option.selected = false);
+        
+        // NEW: Reset attachment radios
+        document.querySelector('input[name="attachment-type"][value="upload"]').checked = true;
+        attachmentUploadGroup.style.display = 'block';
+        attachmentUrlGroup.style.display = 'none';
     }
 }
 
@@ -313,6 +370,10 @@ function hideTaskForm() {
     taskFormSection.style.display = 'none';
     dashboardContent.classList.remove('hidden');
     mainFooter.classList.remove('hidden');
+    attachmentFileInput.value = ''; // NEW: Clear file input
+    attachmentLinkInput.value = ''; // NEW: Clear URL input
+    imagePreviewContainer.style.display = 'none'; // NEW: Hide image preview
+    imagePreview.src = '#'; // NEW: Reset image preview source
 }
 
 /**
@@ -489,9 +550,9 @@ async function generateDailyReportPdf() {
             doc.text('Tidak ada tugas aktif untuk dilaporkan hari ini.', 10, y + 10);
         } else {
             const columnHeaders = [
-                'Proyek', 'Aktivitas', 'Platform', 'Work Status', 'Approval Status', 'PIC / Tim', 'Batas Waktu', 'Catatan', 'Lampiran'
+                'Proyek', 'Aktivitas', 'Platform', 'Work Status', 'Approval Status', 'PIC / Tim', 'Batas Waktu', 'Catatan'
             ];
-            const finalColumnWidths = [25, 45, 25, 25, 25, 25, 20, 60, 17];
+            const finalColumnWidths = [25, 45, 25, 25, 25, 25, 20, 60];
 
             doc.setFont('helvetica', 'bold');
             let currentX = 10;
@@ -510,12 +571,18 @@ async function generateDailyReportPdf() {
             y += 7;
 
             doc.setFont('helvetica', 'normal');
-            activeTasks.forEach((task, index) => {
-                currentX = 10;
+            
+            // NEW: Split tasks with images and without images
+            const tasksWithImages = activeTasks.filter(task => task['Attachment Link'] && task['Attachment Link'].startsWith('data:image/'));
+            const tasksWithoutImages = activeTasks.filter(task => !task['Attachment Link'] || !task['Attachment Link'].startsWith('data:image/'));
+
+            // Render tasks without images first
+            tasksWithoutImages.forEach(task => {
+                let currentX = 10;
                 const taskStatusDisplay = task['Work Status'] +
                                           (task['Work Status'] === 'Final Touch' && task['Progress (%)']
                                            ? ` (${task['Progress (%)']}%)` : '');
-
+                
                 let formattedDeadline = task['Deadline'] || '-';
                 if (task['Deadline']) {
                     const dateObj = new Date(task['Deadline']);
@@ -546,15 +613,14 @@ async function generateDailyReportPdf() {
 
                 const rowHeight = maxHeight * (doc.getLineHeight() / doc.internal.scaleFactor) + 2;
 
-
                 if (y + rowHeight > doc.internal.pageSize.height - 20) {
                     doc.addPage();
                     y = 15;
                     doc.setFont('helvetica', 'bold');
-                    currentX = 10;
+                    let newX = 10;
                     columnHeaders.forEach((headerText, i) => {
-                        doc.text(headerText, currentX, y);
-                        currentX += finalColumnWidths[i];
+                        doc.text(headerText, newX, y);
+                        newX += finalColumnWidths[i];
                     });
                     y += 3;
                     doc.line(10, y, doc.internal.pageSize.width - 10, y);
@@ -568,18 +634,62 @@ async function generateDailyReportPdf() {
                     currentX += finalColumnWidths[i];
                 });
 
-                if (task['Attachment Link']) {
-                    const linkText = 'Lihat';
-                    const attachmentColIndex = columnHeaders.indexOf('Lampiran');
-                    const linkX = 10 + finalColumnWidths.slice(0, attachmentColIndex).reduce((sum, width) => sum + width, 0);
-                    const linkY = y;
+                // Handle URL attachments
+                if (task['Attachment Link'] && !task['Attachment Link'].startsWith('data:image/')) {
+                    const linkText = 'Lihat Tautan';
+                    const linkX = currentX + 5; // Add some padding
                     doc.setTextColor(0, 0, 255);
-                    doc.textWithLink(linkText, linkX, linkY, { url: task['Attachment Link'] });
+                    doc.textWithLink(linkText, linkX, y, { url: task['Attachment Link'] });
                     doc.setTextColor(0);
                 }
 
                 y += rowHeight;
+                doc.line(10, y, doc.internal.pageSize.width - 10, y); // Garis bawah setiap baris
+                y += 2;
             });
+            
+            // Add a new section for tasks with images
+            if (tasksWithImages.length > 0) {
+                doc.addPage();
+                y = 15;
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(14);
+                doc.text('Tugas dengan Lampiran Gambar', 10, y);
+                doc.setFontSize(7);
+                y += 10;
+                
+                tasksWithImages.forEach(task => {
+                    if (y + 50 > doc.internal.pageSize.height - 20) { // New page if not enough space
+                        doc.addPage();
+                        y = 15;
+                        doc.setFont('helvetica', 'bold');
+                        doc.setFontSize(14);
+                        doc.text('Tugas dengan Lampiran Gambar', 10, y);
+                        doc.setFontSize(7);
+                        y += 10;
+                    }
+                    
+                    const taskDetails = `Proyek: ${task['Project Name'] || '-'} | Aktivitas: ${task['Activity / Task'] || '-'}`;
+                    doc.text(taskDetails, 10, y);
+                    y += 5;
+                    
+                    try {
+                        const imageData = task['Attachment Link'];
+                        if (imageData && imageData.startsWith('data:image/')) {
+                            const imgWidth = 50;
+                            const imgHeight = 50;
+                            doc.addImage(imageData, 'JPEG', 15, y, imgWidth, imgHeight);
+                            y += imgHeight + 5; // Move down after the image
+                        }
+                    } catch (imgError) {
+                        console.error("Error adding image to PDF:", imgError);
+                        doc.text('Gagal menampilkan gambar.', 15, y);
+                        y += 10;
+                    }
+                    doc.line(10, y, doc.internal.pageSize.width - 10, y);
+                    y += 5;
+                });
+            }
         }
 
         doc.save(`Daily_Report_${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}.pdf`);
@@ -777,6 +887,63 @@ platformSelect.addEventListener('change', () => {
     }
 });
 
+// NEW: Event listener for attachment type radio buttons
+attachmentTypeRadios.forEach(radio => {
+    radio.addEventListener('change', (e) => {
+        if (e.target.value === 'upload') {
+            attachmentUploadGroup.style.display = 'block';
+            attachmentUrlGroup.style.display = 'none';
+        } else {
+            attachmentUploadGroup.style.display = 'none';
+            attachmentUrlGroup.style.display = 'block';
+        }
+        // Clear inputs and hide preview when switching
+        attachmentFileInput.value = '';
+        attachmentLinkInput.value = '';
+        imagePreviewContainer.style.display = 'none';
+        imagePreview.src = '#';
+    });
+});
+
+// NEW: Event listener for file input to show preview
+attachmentFileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            imagePreview.src = event.target.result;
+            imagePreviewContainer.style.display = 'flex';
+        };
+        reader.readAsDataURL(file);
+    } else {
+        imagePreview.src = '#';
+        imagePreviewContainer.style.display = 'none';
+    }
+});
+
+// NEW: Event listener for URL input to show preview
+attachmentLinkInput.addEventListener('input', () => {
+    const url = attachmentLinkInput.value;
+    if (url.startsWith('http')) {
+        imagePreview.src = url;
+        imagePreviewContainer.style.display = 'flex';
+    } else {
+        imagePreview.src = '#';
+        imagePreviewContainer.style.display = 'none';
+    }
+});
+
+// NEW: Event listener to remove image
+removeImageButton.addEventListener('click', () => {
+    attachmentFileInput.value = '';
+    attachmentLinkInput.value = '';
+    imagePreview.src = '#';
+    imagePreviewContainer.style.display = 'none';
+    document.querySelector('input[name="attachment-type"][value="upload"]').checked = true;
+    attachmentUploadGroup.style.display = 'block';
+    attachmentUrlGroup.style.display = 'none';
+});
+
 
 // Submit form tambah/edit tugas
 taskForm.addEventListener('submit', async (e) => {
@@ -794,6 +961,16 @@ taskForm.addEventListener('submit', async (e) => {
     const selectedPICs = Array.from(picTeamSelect.options).filter(option => option.selected).map(option => option.value);
     const picTeamValue = selectedPICs.join(', ');
 
+    let attachmentValue = '';
+    const selectedAttachmentType = document.querySelector('input[name="attachment-type"]:checked').value;
+    if (selectedAttachmentType === 'upload' && attachmentFileInput.files.length > 0) {
+        // Use the base64 string from the preview
+        attachmentValue = imagePreview.src;
+    } else if (selectedAttachmentType === 'url' && attachmentLinkInput.value.trim() !== '') {
+        attachmentValue = attachmentLinkInput.value.trim();
+    }
+
+
     const taskData = {
         'Task ID': taskIdInput.value,
         'Project Name': projectNameInput.value.trim(),
@@ -805,7 +982,7 @@ taskForm.addEventListener('submit', async (e) => {
         'PIC / Team': picTeamValue,
         'Deadline': deadlineInput.value,
         'Priority': prioritySelect.value,
-        'Attachment Link': attachmentLinkInput.value.trim()
+        'Attachment Link': attachmentValue // NEW: Use the processed attachment value
     };
     
     // Debugging: Log data tugas yang akan dikirim
