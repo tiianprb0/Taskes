@@ -504,7 +504,7 @@ body {
 .priority-badge.low { background-color: var(--color-success); }
 
 
-/* Modal Styling (hanya untuk setPinDashboardModal dan archiveListModal sekarang) */
+/* Modal Styling */
 .modal-overlay {
     position: fixed;
     top: 0;
@@ -539,9 +539,27 @@ body {
     position: relative;
     max-height: 90vh;
     overflow-y: auto;
+    text-align: left; /* NEW: Align text to left */
 }
 
-.modal-overlay.active .modal-content {
+.modal-content-image {
+    background-color: var(--color-dark); /* NEW: Background for image modal */
+    padding: 20px;
+    border-radius: 10px;
+    border: 2px solid var(--color-white);
+    box-shadow: 6px 6px 0px var(--color-dark);
+    width: 95%;
+    max-width: 800px;
+    max-height: 95vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    overflow: auto;
+}
+
+.modal-overlay.active .modal-content,
+.modal-overlay.active .modal-content-image {
     transform: translateY(0);
 }
 
@@ -553,8 +571,10 @@ body {
     text-align: center;
 }
 
-.modal-content .form-group {
-    margin-bottom: 15px;
+.modal-content p {
+    color: var(--color-text-main);
+    text-align: left;
+    margin-bottom: 20px;
 }
 
 .modal-buttons {
@@ -578,9 +598,26 @@ body {
     transition: color 0.2s ease;
 }
 
+/* NEW: Close button for image modal */
+.modal-content-image .close-button {
+    color: var(--color-white);
+}
+.modal-content-image .close-button:hover {
+    color: var(--color-primary);
+}
+
+
 .close-button:hover {
     color: var(--color-dark);
 }
+
+.image-popup {
+    max-width: 100%;
+    max-height: 85vh;
+    object-fit: contain;
+    border-radius: 5px;
+}
+
 
 /* Loading Overlay */
 .loading-overlay {
