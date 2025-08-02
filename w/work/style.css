@@ -25,17 +25,30 @@
     --color-focus-border: #80bdff; /* Input focus border - disesuaikan untuk neobrutalism */
     --color-focus-shadow: rgba(0, 123, 255, 0.25); /* Input focus shadow - disesuaikan */
     --color-dashed-line: #ccc; /* Warna garis putus-putus untuk input */
-
-    /* Font Families */
-    --font-family-body: 'Plus Jakarta Sans', sans-serif;
-    --font-family-heading: 'Playfair Display', serif;
-
-    /* Base Font Sizes and Line Heights */
-    --font-size-base: 16px;
-    --line-height-base: 1.5; /* Disesuaikan untuk Neobrutalism */
+    --color-card-border: #6B6054; /* Border warna kartu */
+    --color-shadow: 4px 4px 0px var(--color-dark); /* Bayangan utama */
+    --color-shadow-card: 2px 2px 0px var(--color-dark); /* Bayangan kartu */
+    --color-shadow-hover: 1px 1px 0px var(--color-dark); /* Bayangan saat hover */
+    --color-shadow-active: 0px 0px 0px var(--color-dark); /* Bayangan saat aktif */
+    --color-text-subtle: #888;
+    --border-width: 2px;
+    --radius: 8px;
+    
+    /* Dark Mode variables */
+    --dark-color-bg: #1A1A1A;
+    --dark-color-container-bg: #2A2A2A;
+    --dark-color-text-main: #D0D0D0;
+    --dark-color-text-secondary: #999;
+    --dark-color-border: #D0D0D0;
+    --dark-color-shadow: 4px 4px 0px var(--dark-color-border);
+    --dark-color-shadow-card: 2px 2px 0px var(--dark-color-border);
+    --dark-color-shadow-hover: 1px 1px 0px var(--dark-color-border);
+    --dark-color-shadow-active: 0px 0px 0px var(--dark-color-border);
+    --dark-color-input-bg: #3A3A3A;
+    --dark-color-primary-button-hover: #FF4D4D;
 }
 
-/* Import Google Fonts */
+/* Font Families */
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap');
 
@@ -61,19 +74,127 @@ body {
     overflow-x: hidden;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    position: relative; /* Diperlukan untuk settings panel */
+    transition: background-color 0.3s ease;
 }
 
-/* Kontainer utama (sesuai create-pin-container dari contoh Tian) */
+/* Dark Mode */
+body.dark-mode {
+    background-color: var(--dark-color-bg);
+    color: var(--dark-color-text-main);
+}
+body.dark-mode .container {
+    background-color: var(--dark-color-container-bg);
+    border-color: var(--dark-color-border);
+    box-shadow: var(--dark-color-shadow);
+}
+body.dark-mode .main-title,
+body.dark-mode .settings-title {
+    color: var(--dark-color-text-main);
+}
+body.dark-mode .input-field,
+body.dark-mode .select-field,
+body.dark-mode .textarea-field,
+body.dark-mode .task-item,
+body.dark-mode .login-box {
+    background-color: var(--dark-color-input-bg);
+    border-color: var(--dark-color-border);
+    color: var(--dark-color-text-main);
+    box-shadow: 2px 2px 0px var(--dark-color-border);
+}
+body.dark-mode .input-field:focus,
+body.dark-mode .select-field:focus,
+body.dark-mode .textarea-field:focus {
+    border-color: var(--color-primary);
+    box-shadow: 3px 3px 0px var(--color-primary);
+}
+body.dark-mode .button,
+body.dark-mode .secondary-button,
+body.dark-mode .add-task-btn,
+body.dark-mode .info-button,
+body.dark-mode .task-btn,
+body.dark-mode .sort-select {
+    border-color: var(--dark-color-border);
+    box-shadow: var(--dark-color-shadow-card);
+    color: var(--dark-color-text-main);
+    background-color: var(--dark-color-input-bg);
+}
+body.dark-mode .primary-button:hover,
+body.dark-mode .add-task-btn:hover {
+    background-color: var(--dark-color-primary-button-hover);
+}
+body.dark-mode .task-btn,
+body.dark-mode .close-button,
+body.dark-mode .task-title,
+body.dark-mode .settings-btn,
+body.dark-mode .task-meta-item i,
+body.dark-mode .task-meta-item span {
+    color: var(--dark-color-text-main);
+}
+body.dark-mode .status-badge {
+    border-color: var(--dark-color-border);
+    box-shadow: 1px 1px 0px var(--dark-color-border);
+}
+body.dark-mode .priority-badge {
+    border-color: var(--dark-color-border);
+    box-shadow: 1px 1px 0px var(--dark-color-border);
+}
+body.dark-mode .filter-controls button {
+    background-color: var(--dark-color-container-bg);
+    color: var(--dark-color-text-main);
+}
+body.dark-mode .filter-controls button.active {
+    background-color: var(--dark-color-border);
+    color: var(--dark-color-bg);
+}
+body.dark-mode .header .search-btn,
+body.dark-mode .header .hamburger-menu {
+    background-color: var(--dark-color-input-bg);
+    border-color: var(--dark-color-border);
+    color: var(--dark-color-text-main);
+    box-shadow: 2px 2px 0 var(--dark-color-border);
+}
+body.dark-mode .task-details-content {
+    border-top-color: var(--dark-color-border);
+}
+body.dark-mode .settings-panel {
+    background-color: var(--dark-color-container-bg);
+    border-left-color: var(--dark-color-border);
+}
+body.dark-mode .settings-label {
+    border-bottom-color: var(--dark-color-border);
+    color: var(--dark-color-text-main);
+}
+body.dark-mode .settings-btn {
+    background-color: var(--dark-color-input-bg);
+    border-color: var(--dark-color-border);
+    box-shadow: 2px 2px 0 var(--dark-color-border);
+    color: var(--dark-color-text-main);
+}
+body.dark-mode .settings-btn:hover {
+    background-color: #3A3A3A;
+}
+
+
+/* Kontainer utama */
 .container {
     background-color: var(--color-white);
     padding: 30px;
-    border: 2px solid var(--color-dark); /* Border kuat khas Neobrutalism */
-    border-radius: 8px; /* Sedikit rounded corner */
-    box-shadow: 4px 4px 0px var(--color-dark); /* Bayangan solid khas Neobrutalism */
+    border: var(--border-width) solid var(--color-dark);
+    border-radius: var(--radius);
+    box-shadow: var(--color-shadow);
     width: 100%;
     max-width: 900px;
-    text-align: center;
     margin: 0 auto;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Dashboard Content */
+#dashboard-main-content {
+    display: flex;
+    flex-direction: column;
     flex-grow: 1;
 }
 
@@ -91,9 +212,9 @@ body {
     margin: 40px auto;
     padding: 30px;
     background-color: var(--color-white);
-    border: 2px solid var(--color-dark);
-    border-radius: 8px;
-    box-shadow: 4px 4px 0px var(--color-dark);
+    border: var(--border-width) solid var(--color-dark);
+    border-radius: var(--radius);
+    box-shadow: var(--color-shadow);
 }
 
 .login-box h2 {
@@ -121,7 +242,7 @@ body {
 .textarea-field {
     width: 100%;
     padding: 10px 12px;
-    border: 2px solid var(--color-dark);
+    border: var(--border-width) solid var(--color-dark);
     background-color: var(--color-white);
     border-radius: 4px;
     font-family: var(--font-family-body);
@@ -188,15 +309,15 @@ body {
 /* Gaya Tombol Umum (Neobrutalism style) */
 .button {
     padding: 12px 20px;
-    border: 2px solid var(--color-dark);
-    border-radius: 8px;
+    border: var(--border-width) solid var(--color-dark);
+    border-radius: var(--radius);
     cursor: pointer;
     font-family: var(--font-family-body);
     font-size: 1em;
     font-weight: 700;
     transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
     margin: 5px;
-    box-shadow: 3px 3px 0px var(--color-dark);
+    box-shadow: var(--color-shadow);
     text-decoration: none;
     display: inline-flex;
     align-items: center;
@@ -206,7 +327,7 @@ body {
 
 .button:active {
     transform: translate(2px, 2px);
-    box-shadow: 1px 1px 0px var(--color-dark);
+    box-shadow: var(--color-shadow-hover);
 }
 
 .primary-button {
@@ -248,7 +369,7 @@ body {
 .info-button {
     background-color: #17a2b8;
     color: var(--color-white);
-    border: 2px solid var(--color-dark);
+    border: var(--border-width) solid var(--color-dark);
     box-shadow: 3px 3px 0px var(--color-dark);
     padding: 8px 12px;
     border-radius: 6px;
@@ -270,7 +391,6 @@ body {
     box-shadow: 1px 1px 0px var(--color-dark);
 }
 
-/* Perbaikan: Styling khusus untuk tombol di modal arsip */
 .restore-button {
     padding: 6px 12px;
     font-size: 0.9em;
@@ -285,27 +405,13 @@ body {
     text-align: center;
 }
 
-/* --- Styling untuk Halaman Dashboard --- */
-.dashboard-content-wrapper {
-    display: block;
-    transition: opacity 0.3s ease, visibility 0.3s ease, height 0.3s ease;
-}
-
-.dashboard-content-wrapper.hidden {
-    opacity: 0;
-    visibility: hidden;
-    height: 0;
-    overflow: hidden;
-    padding: 0;
-    margin: 0;
-}
-
+/* --- Styling untuk Halaman Dashboard yang baru --- */
 .task-form-section {
     display: none;
     background-color: var(--color-white);
-    border: 2px solid var(--color-dark);
-    border-radius: 8px;
-    box-shadow: 4px 4px 0px var(--color-dark);
+    border: var(--border-width) solid var(--color-dark);
+    border-radius: var(--radius);
+    box-shadow: var(--color-shadow);
     padding: 30px;
     width: 100%;
     max-width: 600px;
@@ -321,187 +427,453 @@ body {
     text-align: center;
 }
 
-.top-header-actions {
+/* NEW: Header & Controls (dari dailish) */
+.header {
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
     align-items: center;
-    width: 100%;
-    margin-bottom: 10px;
-    gap: 10px;
-}
-
-.user-info-text {
-    font-weight: 500;
-    color: var(--color-text-secondary);
-}
-
-.text-button {
-    background: none;
-    border: none;
-    color: var(--color-primary);
-    cursor: pointer;
-    font-family: var(--font-family-body);
-    font-size: 1em;
-    text-decoration: underline;
-    padding: 0;
-    transition: color 0.2s ease;
-}
-.text-button:hover {
-    color: var(--color-accent-hover);
-}
-
-
-.tabs {
-    display: flex;
     margin-bottom: 20px;
-    border-bottom: 2px solid var(--color-e0e0e0);
 }
 
-.tab-button {
-    padding: 12px 20px;
-    border: none;
-    background-color: transparent;
-    cursor: pointer;
-    font-family: var(--font-family-body);
-    font-size: 1em;
-    font-weight: 500;
-    color: var(--color-text-main);
-    border-bottom: 2px solid transparent;
-    transition: all 0.3s ease;
-}
-
-.tab-button.active {
-    color: var(--color-primary);
-    border-bottom-color: var(--color-primary);
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
     font-weight: 700;
 }
 
-.tab-button:hover:not(.active) {
-    color: var(--color-accent-hover);
-    background-color: var(--color-background-lightest);
-}
-
-.action-buttons-row {
+.user-avatar {
+    width: 36px;
+    height: 36px;
+    background-color: var(--color-dark);
+    color: var(--color-white);
+    border-radius: 50%;
     display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
-    justify-content: flex-start;
-    /* Perbaikan: Menghapus aturan flex-wrap dan mengatur responsivitas agar tombol sebaris */
-    flex-wrap: nowrap;
+    justify-content: center;
     align-items: center;
-}
-
-/* Perbaikan: Menjadikan tombol "Tambah Tugas Baru" dan "Generate Daily Report" sama ukurannya dan tetap sebaris */
-.action-buttons-row .button {
-    flex: 1 1 auto;
-    min-width: 0;
-    text-align: center;
-}
-
-/* Aturan untuk layar yang lebih kecil */
-@media (max-width: 480px) {
-    .action-buttons-row {
-        flex-wrap: nowrap;
-        overflow-x: auto; /* Memungkinkan scroll horizontal jika tombol terlalu banyak */
-        justify-content: flex-start;
-    }
-}
-
-
-.add-task-button, .generate-report-button {
-    flex-shrink: 0;
-    width: auto;
-    margin: 0;
-}
-
-/* Table Styling */
-.task-table-container {
-    overflow-x: auto;
-    margin-top: 20px;
-}
-
-.task-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 20px;
-    min-width: 800px;
+    font-size: 1rem;
+    font-weight: 700;
+    box-shadow: 2px 2px 0 var(--color-dark);
     border: 2px solid var(--color-dark);
-    box-shadow: 4px 4px 0px var(--color-dark);
 }
 
-.task-table th,
-.task-table td {
-    border: 1px solid var(--color-dark);
-    padding: 12px 15px;
-    text-align: left;
-    vertical-align: top;
+.header-controls {
+    display: flex;
+    gap: 0.5rem;
 }
 
-.task-table th {
-    background-color: var(--color-background-lighter);
+.search-btn, .hamburger-menu {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background-color: var(--color-white);
+    border: 2px solid var(--color-dark);
+    color: var(--color-dark);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    box-shadow: 2px 2px 0 var(--color-dark);
+    transition: all 0.2s ease;
+}
+
+.search-btn:hover, .hamburger-menu:hover {
+    box-shadow: 1px 1px 0 var(--color-dark);
+    transform: translate(1px, 1px);
+}
+
+/* NEW: Title Bar (dari dailish) */
+.title-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+.title-bar h1 {
+    font-family: var(--font-family-heading);
+    font-size: 2rem;
     font-weight: 700;
+}
+.sort-select {
+    padding: 0.5rem 1.5rem 0.5rem 0.75rem;
+    border: 2px solid var(--color-dark);
+    border-radius: var(--radius);
+    font-size: var(--font-sm);
+    font-weight: 600;
     color: var(--color-text-main);
-    white-space: nowrap;
+    background-color: var(--color-white);
+    box-shadow: var(--color-shadow-card);
+    cursor: pointer;
+    appearance: none;
+    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2212%22%20height%3D%228%22%20viewBox%3D%220%200%2012%208%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cpath%20d%3D%22M1%201L6%206L11%201%22%20stroke%3D%22%236B6054%22%20stroke-width%3D%222%22%2F%3E%3C%2Fsvg%3E');
+    background-repeat: no-repeat;
+    background-position: right 0.5rem center;
+    background-size: 12px;
+    max-width: 150px;
+    outline: none;
 }
 
-.task-table tr:nth-child(even) {
-    background-color: var(--color-background-light);
+/* NEW: Search Bar (dari dailish) */
+.search-bar {
+    display: none; /* Default hidden */
+    margin-bottom: 20px;
+    animation: fadeIn 0.3s ease;
 }
 
-.task-table tr:hover {
-    background-color: var(--color-hover-light);
+.search-input {
+    width: 100%;
+    padding: 10px 15px;
+    border: 2px solid var(--color-dark);
+    background-color: var(--color-background-lighter);
+    border-radius: 4px;
+    font-family: var(--font-family-body);
+    font-size: 1em;
+    color: var(--color-text-main);
+    transition: border-color 0.2s ease;
+    box-shadow: 2px 2px 0px var(--color-dark);
+    outline: none;
+}
+.search-input:focus {
+    border-color: var(--color-primary);
+    box-shadow: 3px 3px 0px var(--color-primary);
 }
 
-.task-table td.actions {
+
+/* NEW: Filter Controls (dari dailish) */
+.filter-controls {
     display: flex;
     flex-wrap: wrap;
+    gap: 0.6rem;
+    margin-bottom: 1.25rem;
+    align-items: center;
+}
+.filter-controls button {
+    flex: 1;
+    background-color: var(--color-white);
+    border: var(--border-width) solid var(--color-dark);
+    padding: 0.6rem 0.5rem;
+    font-size: var(--font-sm);
+    font-weight: 600;
+    color: var(--color-text-main);
+    cursor: pointer;
+    box-shadow: var(--color-shadow-card);
+    transition: all 0.2s ease;
+    border-radius: var(--radius);
+    min-width: 70px;
+}
+.filter-controls button.active {
+    background-color: var(--color-dark);
+    color: var(--color-white);
+}
+.filter-controls button:hover {
+    transform: translate(1px, 1px);
+    box-shadow: var(--color-shadow-hover);
+}
+.add-task-btn {
+    flex: 1;
+    background-color: var(--color-primary);
+    color: var(--color-white);
+    border: var(--border-width) solid var(--color-dark);
+    padding: 0.6rem 0.5rem;
+    font-size: var(--font-sm);
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: var(--color-shadow-card);
+    transition: all 0.2s ease;
+    border-radius: var(--radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
     gap: 5px;
-    padding: 8px;
-    align-items: flex-start;
+    min-width: 100px;
+}
+.add-task-btn:hover {
+    background-color: var(--color-accent-hover);
+    transform: translate(1px, 1px);
+    box-shadow: var(--color-shadow-hover);
+}
+.add-task-btn:active {
+    transform: translate(2px, 2px);
+    box-shadow: 1px 1px 0px var(--color-dark);
 }
 
-/* Status Badges (Neobrutalism style) */
+
+/* NEW: Task List (dari dailish) */
+.task-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+.task-item {
+    background-color: var(--color-white);
+    padding: 1.25rem;
+    border: var(--border-width) solid var(--color-dark);
+    box-shadow: var(--color-shadow);
+    border-radius: var(--radius);
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+}
+.task-item.pinned {
+    border-left: 5px solid #FFD700; /* Warna emas untuk pinned */
+}
+
+.task-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    gap: 1rem;
+}
+
+.task-title-and-meta {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+}
+.task-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    word-break: break-word;
+}
+.task-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    font-size: var(--font-sm);
+    flex-wrap: wrap;
+}
+
+.task-actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+.task-btn {
+    font-size: 1rem;
+    cursor: pointer;
+    background: none;
+    border: none;
+    color: var(--color-text-secondary);
+    padding: 0.25rem;
+    transition: color 0.2s ease;
+}
+.task-btn:hover {
+    color: var(--color-dark);
+}
+
+.task-details {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+    padding-left: 2rem;
+}
+.task-details-content {
+    padding-top: 1rem;
+    border-top: 2px dashed var(--color-dashed-line);
+    margin-top: 1rem;
+}
+.task-item.expanded .task-details {
+    max-height: 500px;
+    padding-left: 0;
+}
+.task-item.expanded .task-details-content {
+    padding-left: 2rem;
+}
+
+.task-details-text {
+    font-size: var(--font-sm);
+    white-space: pre-wrap;
+    word-break: break-word;
+    margin-bottom: 1rem;
+}
+
+.task-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+/* NEW: Badges */
 .status-badge {
     display: inline-block;
-    padding: 5px 10px;
+    padding: 0.3rem 0.6rem;
     border-radius: 4px;
-    font-size: 0.85em;
+    font-size: var(--font-xs);
     font-weight: 700;
     text-transform: uppercase;
-    color: var(--color-white);
     text-align: center;
-    min-width: 90px;
-    border: 1px solid var(--color-dark);
-    box-shadow: 2px 2px 0px var(--color-dark);
+    border: none;
+    box-shadow: none;
 }
+.status-badge.editing { background-color: transparent; color: #007bff; }
+.status-badge.take-konten { background-color: transparent; color: #17a2b8; }
+.status-badge.final-touch { background-color: transparent; color: #6f42c1; }
+.status-badge.done { background-color: transparent; color: #28a745; }
+.status-badge.on-hold { background-color: transparent; color: #ffc107; }
+.status-badge.archived { background-color: transparent; color: #6c757d; }
+.status-badge.approved { background-color: transparent; color: #28a745; }
+.status-badge.to-be-announced { background-color: transparent; color: #6c757d; }
+.status-badge.revised { background-color: transparent; color: #dc3545; }
 
-.status-badge.editing { background-color: #007bff; }
-.status-badge.take-konten { background-color: #17a2b8; }
-.status-badge.final-touch { background-color: #6f42c1; }
-/* Perbaikan: Tambahkan styling untuk status Done */
-.status-badge.done { background-color: #28a745; }
-.status-badge.on-hold { background-color: #ffc107; color: var(--color-text-main); }
-.status-badge.archived { background-color: #6c757d; }
-.status-badge.approved { background-color: #28a745; }
-.status-badge.to-be-announced { background-color: #6c757d; }
-.status-badge.revised { background-color: #dc3545; }
-
-
-/* Priority Badges (Neobrutalism style) */
 .priority-badge {
-    display: inline-block;
-    padding: 3px 8px;
-    border-radius: 4px;
-    font-size: 0.8em;
+    width: 18px;
+    height: 18px;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+    font-size: var(--font-xs);
     font-weight: 600;
     color: var(--color-white);
-    text-align: center;
     border: 1px solid var(--color-dark);
     box-shadow: 1px 1px 0px var(--color-dark);
 }
 .priority-badge.high { background-color: var(--color-error); }
-.priority-badge.medium { background-color: #ffc107; color: var(--color-text-main); }
+.priority-badge.medium { background-color: #ffc107; }
 .priority-badge.low { background-color: var(--color-success); }
+
+
+/* NEW: Empty State (dari dailish) */
+.empty-state {
+    text-align: center;
+    padding: 2rem;
+    background-color: var(--color-white);
+    border: var(--border-width) solid var(--color-dark);
+    box-shadow: var(--color-shadow);
+    border-radius: var(--radius);
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-dark);
+    animation: fadeIn 0.3s ease;
+}
+
+.empty-state p {
+    margin-bottom: 0.5rem;
+    font-size: 1.25rem;
+}
+
+.empty-state small {
+    font-size: var(--font-sm);
+    color: var(--color-dark);
+    opacity: 0.7;
+}
+
+/* NEW: Settings Panel (dari dailish) */
+.settings-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 300px;
+    height: 100vh;
+    background-color: var(--color-background-light);
+    border-left: 2px solid var(--color-dark);
+    box-shadow: -4px 0 10px rgba(0,0,0,0.1);
+    transform: translateX(100%);
+    transition: transform 0.3s ease-in-out;
+    z-index: 9999;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+}
+.settings-panel.active {
+    transform: translateX(0);
+}
+.settings-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+.settings-title {
+    font-family: var(--font-family-heading);
+    font-size: 1.6rem;
+    font-weight: 700;
+}
+.close-settings {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--color-text-secondary);
+}
+.close-settings:hover {
+    color: var(--color-dark);
+}
+.settings-group {
+    margin-bottom: 20px;
+}
+.settings-label {
+    display: block;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--color-dark);
+    margin-bottom: 10px;
+    border-bottom: 2px solid var(--color-dark);
+    padding-bottom: 5px;
+}
+.settings-btn {
+    width: 100%;
+    text-align: left;
+    padding: 12px 15px;
+    border: 2px solid var(--color-dark);
+    background-color: var(--color-white);
+    border-radius: var(--radius);
+    box-shadow: 2px 2px 0 var(--color-dark);
+    font-family: var(--font-family-body);
+    font-size: 1em;
+    font-weight: 500;
+    color: var(--color-text-main);
+    cursor: pointer;
+    margin-top: 10px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+}
+.settings-btn:hover {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0 var(--color-dark);
+    background-color: var(--color-background-lighter);
+}
+.settings-btn i {
+    width: 20px;
+    text-align: center;
+}
+.theme-options {
+    display: flex;
+    gap: 10px;
+}
+.theme-option {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid var(--color-dark);
+    background-color: var(--color-white);
+    box-shadow: 2px 2px 0 var(--color-dark);
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: var(--color-dark);
+    font-size: 1.2rem;
+}
+.theme-option:hover {
+    box-shadow: 1px 1px 0 var(--color-dark);
+    transform: translate(1px, 1px);
+}
+.theme-option.theme-light i {
+    color: #F7D840;
+}
+.theme-option.theme-dark i {
+    color: #333;
+}
 
 
 /* Modal Styling */
@@ -539,11 +911,11 @@ body {
     position: relative;
     max-height: 90vh;
     overflow-y: auto;
-    text-align: left; /* NEW: Align text to left */
+    text-align: left;
 }
 
 .modal-content-image {
-    background-color: var(--color-dark); /* NEW: Background for image modal */
+    background-color: var(--color-dark);
     padding: 20px;
     border-radius: 10px;
     border: 2px solid var(--color-white);
@@ -598,7 +970,6 @@ body {
     transition: color 0.2s ease;
 }
 
-/* NEW: Close button for image modal */
 .modal-content-image .close-button {
     color: var(--color-white);
 }
@@ -643,61 +1014,9 @@ body {
     visibility: visible;
 }
 
-/* Footer Styling */
+/* Footer Styling (dihapus/dimodifikasi) */
 footer {
-    background-color: transparent;
-    padding: 0;
-    text-align: center;
-    border-top: none;
-    margin-top: 20px;
-    width: auto;
-    max-width: 900px;
-    margin-left: auto;
-    margin-right: auto;
-    transition: opacity 0.3s ease, visibility 0.3s ease, height 0.3s ease;
-}
-
-footer.hidden {
-    opacity: 0;
-    visibility: hidden;
-    height: 0;
-    overflow: hidden;
-    padding: 0;
-    margin: 0;
-}
-
-.footer-content {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 0;
-    border-top: none;
-    box-shadow: none;
-    background-color: transparent;
-    padding: 0;
-    border-radius: 0;
-}
-
-.footer-links-left {
-    display: flex;
-    gap: 15px;
-    align-items: center;
-}
-
-.footer-link {
-    color: var(--color-primary);
-    cursor: pointer;
-    text-decoration: underline;
-    font-weight: 500;
-    transition: color 0.2s ease;
-}
-
-.footer-link:hover {
-    color: var(--color-accent-hover);
-}
-
-.footer-divider {
-    color: var(--color-text-light);
+    display: none;
 }
 
 /* Styling untuk daftar arsip di modal */
@@ -707,7 +1026,6 @@ footer.hidden {
     margin: 0;
 }
 
-/* Perbaikan: Atur li menjadi flexbox untuk menempatkan tombol di kanan */
 #archivedProjectsList li {
     display: flex;
     justify-content: space-between;
@@ -811,49 +1129,40 @@ footer.hidden {
         padding: 20px;
     }
 
-    .top-header-actions {
-        flex-direction: column;
-        align-items: flex-end;
-        gap: 5px;
-    }
-
-    .header-dashboard {
+    .title-bar {
         flex-direction: column;
         align-items: flex-start;
-        gap: 15px;
+        gap: 10px;
     }
 
-    .header-dashboard h2 {
-        font-size: 1.5em;
-    }
-
-    .tabs {
+    .filter-controls {
         flex-wrap: wrap;
     }
-
-    .tab-button {
-        flex: 1 1 auto;
-        text-align: center;
-        padding: 10px;
+    
+    .filter-controls button {
+        flex: 1 1 45%;
+        min-width: 0;
     }
 
-    .action-buttons-row {
-        flex-direction: row; /* Tetap satu baris di tablet */
-        flex-wrap: nowrap; /* Mencegah wrap */
-        justify-content: center; /* Pusatkan tombol */
-        overflow-x: auto; /* Tambahkan scroll jika tombol terlalu banyak */
+    .task-item {
+        padding: 1rem;
     }
 
-    .add-task-button, .generate-report-button {
-        min-width: 150px; /* Sesuaikan sesuai kebutuhan */
-        flex-grow: 1;
-        flex-shrink: 0;
+    .task-details {
+        padding-left: 0;
+    }
+    .task-item.expanded .task-details-content {
+        padding-left: 0;
     }
 
-    .task-table th,
-    .task-table td {
-        padding: 10px;
-        font-size: 0.9em;
+    .task-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .task-actions {
+        margin-top: 1rem;
     }
 
     .modal-content {
@@ -903,15 +1212,33 @@ footer.hidden {
     .modal-buttons {
         flex-direction: column;
     }
-    footer {
-        padding: 0;
+
+    .settings-panel {
+        width: 100%;
     }
-    .footer-content {
-        padding: 5px 0;
+
+    .filter-controls {
+        flex-wrap: wrap;
+    }
+    .add-task-btn {
+        flex: 1 1 100%;
+        min-width: auto;
+    }
+
+    .task-header {
         flex-direction: column;
-        gap: 10px;
+        align-items: flex-start;
     }
-    .action-buttons-row {
-        flex-wrap: nowrap;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
 }
