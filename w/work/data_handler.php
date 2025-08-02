@@ -194,6 +194,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 echo json_encode(['status' => 'error', 'message' => 'Gagal mengambil data arsip dari Apps Script.']);
                 exit();
             }
+        } elseif ($action === 'pin') {
+            $isPinned = $requestData['isPinned'] ?? false;
+            $pinnedBy = $requestData['pinnedBy'] ?? null;
+            
+            if (!$taskId) {
+                http_response_code(400);
+                echo json_encode(['status' => 'error', 'message' => 'Task ID diperlukan untuk pin tugas.']);
+                exit();
+            }
+
+            $tasks = readTasks();
+            $found = false;
+            foreach ($tasks as &$t) {
+                if (isset($t['Task ID']) && $t['Task ID'] === $taskId) {
+                    $t['isPinned'] = $isPinned;
+                    $t['pinnedBy'] = $pinnedBy;
+                    $found = true;
+                    break;
+                }
+            }
+            
+            if ($found && writeTasks($tasks)) {
+                echo json_encode(['status' => 'success', 'message' => 'Status pin berhasil diperbarui.']);
+            } else if (!$found) {
+                http_response_code(404);
+                echo json_encode(['status' => 'error', 'message' => 'Tugas tidak ditemukan.']);
+            } else {
+                http_response_code(500);
+                echo json_encode(['status' => 'error', 'message' => 'Gagal menulis ke file JSON lokal.']);
+            }
+            exit();
         } else {
             $response = ['status' => 'error', 'message' => 'Aksi tidak dikenal.'];
             http_response_code(400);
