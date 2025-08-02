@@ -13,7 +13,7 @@
     <!-- Memuat file CSS utama (path relatif) -->
     <link rel="stylesheet" href="../style.css">
 </head>
-<body>
+<body data-theme="light-mode">
     <div class="container">
         <!-- Dashboard Utama -->
         <div id="dashboard-main-content">
@@ -188,12 +188,11 @@
         <div class="settings-group">
             <label class="settings-label">Tampilan</label>
             <div class="theme-options">
-                <button class="theme-option theme-light" id="theme-light">
-                    <i class="fas fa-sun"></i>
-                </button>
-                <button class="theme-option theme-dark" id="theme-dark">
-                    <i class="fas fa-moon"></i>
-                </button>
+                <button class="theme-option theme-light" id="theme-light" data-theme="light-mode"></button>
+                <button class="theme-option theme-dark" id="theme-dark" data-theme="dark-mode"></button>
+                <button class="theme-option theme-pink" id="theme-pink" data-theme="pink-mode"></button>
+                <button class="theme-option theme-blue" id="theme-blue" data-theme="blue-mode"></button>
+                <button class="theme-option theme-green" id="theme-green" data-theme="green-mode"></button>
             </div>
         </div>
         
