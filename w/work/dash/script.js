@@ -2,6 +2,10 @@
 // Deskripsi: Logika JavaScript untuk halaman dashboard Task Tracker.
 // Perbaikan: Menambahkan logika untuk fitur archive, restore, dan status "Done" baru.
 // Perbaikan: Menambahkan fitur upload gambar atau URL dan menampilkan gambar di laporan PDF.
+// Perbaikan: Mengganti notifikasi bawaan browser dengan modal kustom dan menambahkan popup gambar.
+// Perbaikan: Menambahkan margin di laporan PDF agar tidak terlalu rapat.
+// Perbaikan: Menyesuaikan lebar kolom pada laporan PDF dan memperbesar ukuran font.
+// Perbaikan: Fungsionalitas upload gambar diubah agar menyimpan file ke server dan menyimpan URL-nya.
 
 // --- KONSTANTA ---
 // Ganti dengan URL proxy PHP baru Anda
@@ -9,44 +13,45 @@ const APPS_SCRIPT_PROXY_URL = '../apps_script_proxy.php';
 const PIN_MANAGER_URL = '../pin_manager.php'; // Path ke file pin_manager.php
 const TASK_QUEUE_URL = '../task_queue.json'; // Mengambil data dari JSON lokal
 const DATA_HANDLER_URL = '../data_handler.php'; // URL baru untuk handler data
+const UPLOAD_HANDLER_URL = '../upload_handler.php'; // NEW: URL untuk file upload
 const SESSION_KEY = 'loggedInUser';
 const SESSION_DURATION_MS = 12 * 60 * 60 * 1000; // 12 jam dalam milidetik
 
 // Elemen DOM
 const loggedInUsernameSpan = document.getElementById('loggedInUsername');
 const logoutButton = document.getElementById('logoutButton');
-const setPinDashboardText = document.getElementById('setPinDashboardText'); // Mengubah dari button ke span/text
+const setPinDashboardText = document.getElementById('setPinDashboardText');
 const allTasksTab = document.getElementById('allTasksTab');
 const myTasksTab = document.getElementById('myTasksTab');
-const archiveTasksText = document.getElementById('archiveTasksText'); // New Archive Text Link
+const archiveTasksText = document.getElementById('archiveTasksText');
 const addTaskButton = document.getElementById('addTaskButton');
-const generateReportButton = document.getElementById('generateReportButton'); // New Generate Report Button
+const generateReportButton = document.getElementById('generateReportButton');
 const taskTableBody = document.getElementById('taskTableBody');
-const dashboardContent = document.getElementById('dashboardContent'); // Konten dashboard utama
-const taskFormSection = document.getElementById('taskFormSection'); // Bagian form tambah/edit tugas
+const dashboardContent = document.getElementById('dashboardContent');
+const taskFormSection = document.getElementById('taskFormSection');
 const modalTitle = document.getElementById('modalTitle');
 const taskForm = document.getElementById('taskForm');
 const loadingOverlay = document.getElementById('loadingOverlay');
-const mainFooter = document.getElementById('mainFooter'); // Referensi ke elemen footer
+const mainFooter = document.getElementById('mainFooter');
 
 // Input form modal (tugas)
 const taskIdInput = document.getElementById('taskId');
 const projectNameInput = document.getElementById('projectName');
 const activityInput = document.getElementById('activity');
 const platformSelect = document.getElementById('platform');
-const otherPlatformGroup = document.getElementById('otherPlatformGroup'); // Group untuk input 'Other'
-const otherPlatformInput = document.getElementById('otherPlatformInput'); // Input 'Other'
+const otherPlatformGroup = document.getElementById('otherPlatformGroup');
+const otherPlatformInput = document.getElementById('otherPlatformInput');
 const workStatusSelect = document.getElementById('workStatus');
-const finalTouchProgressGroup = document.getElementById('finalTouchProgressGroup'); // Group untuk slider Final Touch
-const finalTouchProgressInput = document.getElementById('finalTouchProgress'); // Slider Final Touch
-const finalTouchProgressValueSpan = document.getElementById('finalTouchProgressValue'); // Span untuk menampilkan nilai slider
+const finalTouchProgressGroup = document.getElementById('finalTouchProgressGroup');
+const finalTouchProgressInput = document.getElementById('finalTouchProgress');
+const finalTouchProgressValueSpan = document.getElementById('finalTouchProgressValue');
 const approvalStatusSelect = document.getElementById('approvalStatus');
 const notesInput = document.getElementById('notes');
 const picTeamSelect = document.getElementById('picTeam');
 const deadlineInput = document.getElementById('deadline');
 const prioritySelect = document.getElementById('priority');
 
-// NEW: Attachment DOM elements
+// Attachment DOM elements
 const attachmentTypeRadios = document.querySelectorAll('input[name="attachment-type"]');
 const attachmentUploadGroup = document.getElementById('attachment-upload-group');
 const attachmentUrlGroup = document.getElementById('attachment-url-group');
@@ -70,10 +75,60 @@ const archiveListModal = document.getElementById('archiveListModal');
 const closeArchiveListModalButton = document.getElementById('closeArchiveListModalButton');
 const archivedProjectsList = document.getElementById('archivedProjectsList');
 
+// Elemen Modal Notifikasi Kustom
+const customAlertModal = document.getElementById('customAlertModal');
+const customAlertMessage = document.getElementById('customAlertMessage');
+const customAlertOkButton = document.getElementById('customAlertOkButton');
+const customConfirmModal = document.getElementById('customConfirmModal');
+const customConfirmMessage = document.getElementById('customConfirmMessage');
+const customConfirmOkButton = document.getElementById('customConfirmOkButton');
+const customConfirmCancelButton = document.getElementById('customConfirmCancelButton');
 
-let allTasks = []; // Menyimpan semua data tugas yang diambil dari spreadsheet
-let currentFilter = 'all'; // 'all', 'my', atau 'archive'
-let currentLoggedInUser = null; // Menyimpan nama pengguna yang sedang login
+// Elemen Modal Popup Gambar
+const imagePopupModal = document.getElementById('imagePopupModal');
+const imagePopupImage = document.getElementById('imagePopupImage');
+const closeImagePopupModalButton = document.getElementById('closeImagePopupModalButton');
+
+
+let allTasks = [];
+let currentFilter = 'all';
+let currentLoggedInUser = null;
+
+let confirmCallback = null;
+
+// --- FUNGSI NOTIFIKASI KUSTOM ---
+
+/**
+ * Menampilkan modal alert kustom.
+ * @param {string} message - Pesan yang akan ditampilkan.
+ */
+function showCustomAlert(message) {
+    customAlertMessage.textContent = message;
+    customAlertModal.classList.add('active');
+}
+
+/**
+ * Menampilkan modal konfirmasi kustom.
+ * @param {string} message - Pesan konfirmasi yang akan ditampilkan.
+ * @returns {Promise<boolean>} - Mengembalikan Promise yang resolve dengan true jika OK, false jika Batal.
+ */
+function showCustomConfirm(message) {
+    return new Promise(resolve => {
+        customConfirmMessage.textContent = message;
+        customConfirmModal.classList.add('active');
+        confirmCallback = resolve;
+    });
+}
+
+/**
+ * Menutup semua modal notifikasi kustom.
+ */
+function closeCustomModals() {
+    customAlertModal.classList.remove('active');
+    customConfirmModal.classList.remove('active');
+    imagePopupModal.classList.remove('active');
+}
+
 
 // --- FUNGSI UTAMA ---
 
@@ -83,7 +138,7 @@ let currentLoggedInUser = null; // Menyimpan nama pengguna yang sedang login
 async function checkLoginStatus() {
     const storedSession = localStorage.getItem(SESSION_KEY);
     if (!storedSession) {
-        window.location.href = '../index.html'; // Redirect ke halaman login
+        window.location.href = '../index.html';
         return null;
     }
 
@@ -91,18 +146,16 @@ async function checkLoginStatus() {
     const currentTime = new Date().getTime();
 
     if (currentTime - sessionData.loginTime >= SESSION_DURATION_MS) {
-        // Sesi kadaluarsa
         localStorage.removeItem(SESSION_KEY);
         window.location.href = '../index.html';
         return null;
     }
 
-    // Sesi masih aktif, perbarui waktu login untuk memperpanjang sesi
     sessionData.loginTime = currentTime;
     localStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
 
     loggedInUsernameSpan.textContent = sessionData.username;
-    currentLoggedInUser = sessionData.username; // Simpan nama user yang login
+    currentLoggedInUser = sessionData.username;
     return sessionData.username;
 }
 
@@ -113,7 +166,6 @@ async function fetchTasks() {
     console.log("Fetching tasks from local JSON...");
     showLoading();
     try {
-        // Menambahkan timestamp sebagai query parameter untuk mencegah caching browser
         const url = `${TASK_QUEUE_URL}?t=${new Date().getTime()}`;
         const response = await fetch(url);
         
@@ -133,10 +185,10 @@ async function fetchTasks() {
             throw new Error(`HTTP error! status: ${response.status}.`);
         }
         const result = await response.json();
-        allTasks = result; // Data langsung dari JSON
+        allTasks = result;
         renderTasks();
     } catch (error) {
-        window.alert('Terjadi kesalahan saat mengambil data tugas. Silakan coba lagi. Detail: ' + error.message);
+        showCustomAlert('Terjadi kesalahan saat mengambil data tugas. Silakan coba lagi. Detail: ' + error.message);
         console.error('Fetch error:', error);
     } finally {
         hideLoading();
@@ -148,7 +200,7 @@ async function fetchTasks() {
  */
 function renderTasks() {
     console.log(`Rendering tasks with filter: ${currentFilter}`);
-    taskTableBody.innerHTML = ''; // Bersihkan tabel
+    taskTableBody.innerHTML = '';
     let tasksToDisplay = [];
 
     if (currentFilter === 'all') {
@@ -164,7 +216,7 @@ function renderTasks() {
     }
 
     if (tasksToDisplay.length === 0) {
-        taskTableBody.innerHTML = '<tr><td colspan="11" style="text-align: center; padding: 20px;">Tidak ada tugas untuk ditampilkan.</td></tr>';
+        taskTableBody.innerHTML = '<tr><td colspan="10" style="text-align: center; padding: 20px;">Tidak ada tugas untuk ditampilkan.</td></tr>';
         return;
     }
 
@@ -184,7 +236,6 @@ function renderTasks() {
                 case 'Editing': return 'editing';
                 case 'Take Konten': return 'take-konten';
                 case 'Final Touch': return 'final-touch';
-                // Perbaikan: Tambahkan status Done
                 case 'Done': return 'done';
                 case 'On Hold': return 'on-hold';
                 case 'Archived': return 'archived';
@@ -211,20 +262,16 @@ function renderTasks() {
         };
 
         let workStatusDisplay = task['Work Status'] || '-';
-        // Perbaikan: Pastikan Final Touch selalu menampilkan progress
         if (task['Work Status'] === 'Final Touch' && task['Progress (%)']) {
             workStatusDisplay = `Final Touch (${task['Progress (%)']}%)`;
         }
         
-        // NEW: Check if attachment is a Base64 image or a URL
-        let attachmentContent = '-';
+        let attachmentButton = '-';
         if (task['Attachment Link']) {
-            if (task['Attachment Link'].startsWith('data:image/')) {
-                // It's a Base64 image
-                attachmentContent = `<a href="${task['Attachment Link']}" target="_blank" class="info-button" style="text-decoration: none; padding: 5px 10px; font-size: 0.8em;">Lihat Gambar</a>`;
-            } else {
-                // It's a URL
-                attachmentContent = `<a href="${task['Attachment Link']}" target="_blank" class="info-button" style="text-decoration: none; padding: 5px 10px; font-size: 0.8em;">Lihat Tautan</a>`;
+            if (task['Attachment Link'].match(/\.(jpeg|jpg|gif|png|webp)$/i)) {
+                attachmentButton = `<button class="button info-button view-attachment-button" data-type="image" data-link="${task['Attachment Link']}">Lihat Gambar</button>`;
+            } else if (task['Attachment Link'].startsWith('http')) {
+                attachmentButton = `<a href="${task['Attachment Link']}" target="_blank" class="button info-button" style="text-decoration: none;">Lihat Tautan</a>`;
             }
         }
 
@@ -235,11 +282,10 @@ function renderTasks() {
             <td>${formatMultiSelectDisplay(task['Platform'])}</td>
             <td><span class="status-badge ${getStatusBadgeClass(task['Work Status'])}">${workStatusDisplay}</span></td>
             <td><span class="status-badge ${getStatusBadgeClass(task['Approval Status'])}">${task['Approval Status'] || '-'}</span></td>
-            <td>${task['Notes'] || '-'}</td>
             <td>${formatMultiSelectDisplay(task['PIC / Team'])}</td>
             <td>${task['Deadline'] || '-'}</td>
             <td><span class="priority-badge ${getPriorityBadgeClass(task['Priority'])}">${task['Priority'] || '-'}</span></td>
-            <td>${attachmentContent}</td>
+            <td>${attachmentButton}</td>
             <td class="actions">
                 <button class="button secondary-button edit-button" data-task-id="${task['Task ID']}">Edit</button>
                 ${task['Work Status'] !== 'Archived' ? `<button class="button danger-button archive-button" data-task-id="${task['Task ID']}">Archive</button>` : ''}
@@ -250,6 +296,17 @@ function renderTasks() {
         const archiveButton = row.querySelector('.archive-button');
         if (archiveButton) {
             archiveButton.addEventListener('click', () => archiveTask(task['Task ID']));
+        }
+        
+        const viewButton = row.querySelector('.view-attachment-button');
+        if (viewButton) {
+            viewButton.addEventListener('click', (e) => {
+                const link = e.target.dataset.link;
+                if (link) {
+                    imagePopupImage.src = link;
+                    imagePopupModal.classList.add('active');
+                }
+            });
         }
     });
 }
@@ -264,7 +321,6 @@ function showTaskForm(taskData = null) {
     otherPlatformGroup.style.display = 'none';
     otherPlatformInput.value = '';
     
-    // NEW: Hide image preview by default
     imagePreviewContainer.style.display = 'none';
     imagePreview.src = '#';
     attachmentFileInput.value = '';
@@ -283,29 +339,23 @@ function showTaskForm(taskData = null) {
         deadlineInput.value = taskData['Deadline'] ? new Date(taskData['Deadline']).toISOString().split('T')[0] : '';
         prioritySelect.value = taskData['Priority'] || 'Low';
         
-        // NEW: Handle attachment data
         const attachmentLink = taskData['Attachment Link'] || '';
-        if (attachmentLink.startsWith('data:image/')) {
-            // It's a Base64 image
-            document.querySelector('input[name="attachment-type"][value="upload"]').checked = true;
-            attachmentUploadGroup.style.display = 'block';
-            attachmentUrlGroup.style.display = 'none';
+        if (attachmentLink.match(/\.(jpeg|jpg|gif|png|webp)$/i) || attachmentLink.startsWith('data:image/')) {
             imagePreview.src = attachmentLink;
             imagePreviewContainer.style.display = 'flex';
-        } else if (attachmentLink.startsWith('http')) {
-            // It's a URL
+        }
+
+        if (attachmentLink.startsWith('http')) {
             document.querySelector('input[name="attachment-type"][value="url"]').checked = true;
             attachmentUploadGroup.style.display = 'none';
             attachmentUrlGroup.style.display = 'block';
             attachmentLinkInput.value = attachmentLink;
-            imagePreview.src = attachmentLink;
-            imagePreviewContainer.style.display = 'flex';
         } else {
-            // No attachment
             document.querySelector('input[name="attachment-type"][value="upload"]').checked = true;
             attachmentUploadGroup.style.display = 'block';
             attachmentUrlGroup.style.display = 'none';
         }
+
 
         workStatusSelect.value = taskData['Work Status'] || 'Editing';
         if (workStatusSelect.value === 'Final Touch') {
@@ -343,6 +393,7 @@ function showTaskForm(taskData = null) {
 
     } else {
         modalTitle.textContent = 'Tambah Tugas Baru';
+        taskForm.reset();
         taskIdInput.value = '';
         projectNameInput.value = '';
         activityInput.value = '';
@@ -356,7 +407,8 @@ function showTaskForm(taskData = null) {
         });
         Array.from(platformSelect.options).forEach(option => option.selected = false);
         
-        // NEW: Reset attachment radios
+        otherPlatformGroup.style.display = 'none';
+        finalTouchProgressGroup.style.display = 'none';
         document.querySelector('input[name="attachment-type"][value="upload"]').checked = true;
         attachmentUploadGroup.style.display = 'block';
         attachmentUrlGroup.style.display = 'none';
@@ -370,10 +422,10 @@ function hideTaskForm() {
     taskFormSection.style.display = 'none';
     dashboardContent.classList.remove('hidden');
     mainFooter.classList.remove('hidden');
-    attachmentFileInput.value = ''; // NEW: Clear file input
-    attachmentLinkInput.value = ''; // NEW: Clear URL input
-    imagePreviewContainer.style.display = 'none'; // NEW: Hide image preview
-    imagePreview.src = '#'; // NEW: Reset image preview source
+    attachmentFileInput.value = '';
+    attachmentLinkInput.value = '';
+    imagePreviewContainer.style.display = 'none';
+    imagePreview.src = '#';
 }
 
 /**
@@ -381,8 +433,8 @@ function hideTaskForm() {
  * @param {string} taskId - ID tugas yang akan diarsipkan.
  */
 async function archiveTask(taskId) {
-    // Menggunakan modal kustom sebagai pengganti `confirm`
-    if (!window.confirm('Apakah Anda yakin ingin mengarsipkan tugas ini?')) {
+    const isConfirmed = await showCustomConfirm('Apakah Anda yakin ingin mengarsipkan tugas ini?');
+    if (!isConfirmed) {
         return;
     }
 
@@ -404,14 +456,14 @@ async function archiveTask(taskId) {
         const result = await response.json();
 
         if (result.status === 'success') {
-            window.alert('Tugas berhasil diarsipkan!');
+            showCustomAlert('Tugas berhasil diarsipkan!');
             fetchTasks();
         } else {
-            window.alert('Gagal mengarsipkan tugas: ' + result.message);
+            showCustomAlert('Gagal mengarsipkan tugas: ' + result.message);
             console.error('API Error:', result.message);
         }
     } catch (error) {
-        window.alert('Terjadi kesalahan saat mengarsipkan tugas. Silakan coba lagi. Detail: ' + error.message);
+        showCustomAlert('Terjadi kesalahan saat mengarsipkan tugas. Silakan coba lagi. Detail: ' + error.message);
         console.error('Archive error:', error);
     } finally {
         hideLoading();
@@ -441,17 +493,15 @@ async function restoreTask(taskId) {
         const result = await response.json();
 
         if (result.status === 'success') {
-            window.alert('Tugas berhasil dikembalikan!');
-            // Panggil lagi fetchTasks untuk memperbarui daftar aktif
+            showCustomAlert('Tugas berhasil dikembalikan!');
             fetchTasks(); 
-            // Tutup modal arsip setelah berhasil
             closeArchiveListModal();
         } else {
-            window.alert('Gagal mengembalikan tugas: ' + result.message);
+            showCustomAlert('Gagal mengembalikan tugas: ' + result.message);
             console.error('API Error:', result.message);
         }
     } catch (error) {
-        window.alert('Terjadi kesalahan saat mengembalikan tugas. Silakan coba lagi. Detail: ' + error.message);
+        showCustomAlert('Terjadi kesalahan saat mengembalikan tugas. Silakan coba lagi. Detail: ' + error.message);
         console.error('Restore error:', error);
     } finally {
         hideLoading();
@@ -465,7 +515,6 @@ async function restoreTask(taskId) {
 async function openArchiveListModal() {
     showLoading();
     try {
-        // Perbaikan: Lakukan panggilan ke data_handler.php untuk mengambil data arsip dari Apps Script.
         const response = await fetch(DATA_HANDLER_URL, {
             method: 'POST',
             headers: {
@@ -499,7 +548,7 @@ async function openArchiveListModal() {
         }
         archiveListModal.classList.add('active');
     } catch (error) {
-        window.alert('Gagal memuat daftar arsip. Silakan coba lagi. Detail: ' + error.message);
+        showCustomAlert('Gagal memuat daftar arsip. Silakan coba lagi. Detail: ' + error.message);
         console.error('Archive list error:', error);
     } finally {
         hideLoading();
@@ -528,16 +577,16 @@ async function generateDailyReportPdf() {
         const reportTitle = `Laporan Tugas Harian - ${formattedDate}`;
 
         doc.setFont('helvetica', 'bold');
-        doc.setFontSize(18);
+        doc.setFontSize(22);
         doc.text(reportTitle, 10, 15);
-        doc.setFontSize(7);
+        doc.setFontSize(11);
         doc.text(`Dibuat oleh: ${currentLoggedInUser}`, 10, 22);
         doc.text(`Tanggal Cetak: ${new Date().toLocaleString('id-ID')}`, 10, 27);
 
         doc.setFont('helvetica', 'normal');
-        doc.setFontSize(7);
+        doc.setFontSize(9);
 
-        let y = 40;
+        let y = 35;
 
         const activeTasks = allTasks.filter(task =>
             task['Work Status'] !== 'Archived'
@@ -550,18 +599,19 @@ async function generateDailyReportPdf() {
             doc.text('Tidak ada tugas aktif untuk dilaporkan hari ini.', 10, y + 10);
         } else {
             const columnHeaders = [
-                'Proyek', 'Aktivitas', 'Platform', 'Work Status', 'Approval Status', 'PIC / Tim', 'Batas Waktu', 'Catatan'
+                'Proyek', 'Aktivitas', 'Platform', 'Work Status', 'Approval Status', 'PIC / Tim', 'Batas Waktu', 'Prioritas', 'Lampiran'
             ];
-            const finalColumnWidths = [25, 45, 25, 25, 25, 25, 20, 60];
+            const finalColumnWidths = [40, 55, 30, 30, 30, 20, 20, 15, 20];
 
             doc.setFont('helvetica', 'bold');
             let currentX = 10;
+            y += 10;
             columnHeaders.forEach((headerText, i) => {
                 const headerLines = doc.splitTextToSize(headerText, finalColumnWidths[i] - 2);
                 doc.text(headerLines, currentX, y);
                 currentX += finalColumnWidths[i];
             });
-            const maxHeaderHeight = columnHeaders.reduce((max, headerText, i) => { // Perbaikan: Ganti maxH menjadi max
+            const maxHeaderHeight = columnHeaders.reduce((max, headerText, i) => {
                 const lines = doc.splitTextToSize(headerText, finalColumnWidths[i] - 2);
                 return Math.max(max, lines.length * (doc.getLineHeight() / doc.internal.scaleFactor));
             }, 0);
@@ -571,13 +621,31 @@ async function generateDailyReportPdf() {
             y += 7;
 
             doc.setFont('helvetica', 'normal');
-            
-            // NEW: Split tasks with images and without images
-            const tasksWithImages = activeTasks.filter(task => task['Attachment Link'] && task['Attachment Link'].startsWith('data:image/'));
-            const tasksWithoutImages = activeTasks.filter(task => !task['Attachment Link'] || !task['Attachment Link'].startsWith('data:image/'));
 
-            // Render tasks without images first
-            tasksWithoutImages.forEach(task => {
+            const imgPromises = activeTasks.map(task => {
+                const attachmentLink = task['Attachment Link'];
+                if (attachmentLink && attachmentLink.match(/\.(jpeg|jpg|gif|png|webp)$/i)) {
+                    return new Promise((resolve) => {
+                        const img = new Image();
+                        img.crossOrigin = 'anonymous';
+                        img.onload = () => resolve(img);
+                        img.onerror = () => {
+                            console.error(`Gagal memuat gambar dari URL: ${attachmentLink}`);
+                            resolve(null);
+                        };
+                        img.src = attachmentLink;
+                    });
+                }
+                return Promise.resolve(null);
+            });
+
+            const loadedImages = await Promise.all(imgPromises);
+
+            for (let i = 0; i < activeTasks.length; i++) {
+                const task = activeTasks[i];
+                const attachmentLink = task['Attachment Link'] || '';
+                const img = loadedImages[i];
+
                 let currentX = 10;
                 const taskStatusDisplay = task['Work Status'] +
                                           (task['Work Status'] === 'Final Touch' && task['Progress (%)']
@@ -601,17 +669,22 @@ async function generateDailyReportPdf() {
                     task['Approval Status'] || '-',
                     task['PIC / Team'] || '-',
                     formattedDeadline,
-                    task['Notes'] || '-'
+                    task['Priority'] || '-'
                 ];
 
-                let maxHeight = 0;
-                const linesPerCell = rowData.map((cellText, i) => {
-                    const textLines = doc.splitTextToSize(cellText, finalColumnWidths[i] - 2);
-                    maxHeight = Math.max(maxHeight, textLines.length);
-                    return textLines;
-                });
+                let imageHeight = 0;
+                let imageWidth = 0;
+                const rowPadding = 2;
+                const textHeight = (doc.getLineHeight() / doc.internal.scaleFactor) * 2;
+                let rowContentHeight = textHeight;
 
-                const rowHeight = maxHeight * (doc.getLineHeight() / doc.internal.scaleFactor) + 2;
+                if (img) {
+                    imageWidth = 20;
+                    imageHeight = img.height * (imageWidth / img.width);
+                    rowContentHeight = Math.max(rowContentHeight, imageHeight);
+                }
+
+                const rowHeight = rowContentHeight + rowPadding * 2;
 
                 if (y + rowHeight > doc.internal.pageSize.height - 20) {
                     doc.addPage();
@@ -629,74 +702,42 @@ async function generateDailyReportPdf() {
                 }
 
                 currentX = 10;
+                const linesPerCell = rowData.map((cellText, i) => doc.splitTextToSize(cellText, finalColumnWidths[i] - 2));
+
                 linesPerCell.forEach((textLines, i) => {
-                    doc.text(textLines, currentX, y);
+                    const textY = y + rowPadding + ((rowContentHeight - (textLines.length * (doc.getLineHeight() / doc.internal.scaleFactor))) / 2);
+                    doc.text(textLines, currentX, textY);
                     currentX += finalColumnWidths[i];
                 });
 
-                // Handle URL attachments
-                if (task['Attachment Link'] && !task['Attachment Link'].startsWith('data:image/')) {
-                    const linkText = 'Lihat Tautan';
-                    const linkX = currentX + 5; // Add some padding
+                const attachmentColIndex = columnHeaders.indexOf('Lampiran');
+                const attachmentX = 10 + finalColumnWidths.slice(0, attachmentColIndex).reduce((sum, width) => sum + width, 0);
+                
+                if (img) {
+                    const imageY = y + rowPadding + ((rowContentHeight - imageHeight) / 2);
+                    doc.addImage(img, 'JPEG', attachmentX + 2, imageY, imageWidth, imageHeight);
+                } else if (attachmentLink.startsWith('http')) {
+                    const linkText = 'Lihat';
                     doc.setTextColor(0, 0, 255);
-                    doc.textWithLink(linkText, linkX, y, { url: task['Attachment Link'] });
+                    const linkY = y + rowPadding + (rowContentHeight / 2);
+                    doc.textWithLink(linkText, attachmentX + 2, linkY, { url: attachmentLink });
                     doc.setTextColor(0);
+                } else {
+                    const textY = y + rowPadding + (rowContentHeight / 2);
+                    doc.text('-', attachmentX + 2, textY);
                 }
 
                 y += rowHeight;
-                doc.line(10, y, doc.internal.pageSize.width - 10, y); // Garis bawah setiap baris
+                doc.line(10, y, doc.internal.pageSize.width - 10, y);
                 y += 2;
-            });
-            
-            // Add a new section for tasks with images
-            if (tasksWithImages.length > 0) {
-                doc.addPage();
-                y = 15;
-                doc.setFont('helvetica', 'bold');
-                doc.setFontSize(14);
-                doc.text('Tugas dengan Lampiran Gambar', 10, y);
-                doc.setFontSize(7);
-                y += 10;
-                
-                tasksWithImages.forEach(task => {
-                    if (y + 50 > doc.internal.pageSize.height - 20) { // New page if not enough space
-                        doc.addPage();
-                        y = 15;
-                        doc.setFont('helvetica', 'bold');
-                        doc.setFontSize(14);
-                        doc.text('Tugas dengan Lampiran Gambar', 10, y);
-                        doc.setFontSize(7);
-                        y += 10;
-                    }
-                    
-                    const taskDetails = `Proyek: ${task['Project Name'] || '-'} | Aktivitas: ${task['Activity / Task'] || '-'}`;
-                    doc.text(taskDetails, 10, y);
-                    y += 5;
-                    
-                    try {
-                        const imageData = task['Attachment Link'];
-                        if (imageData && imageData.startsWith('data:image/')) {
-                            const imgWidth = 50;
-                            const imgHeight = 50;
-                            doc.addImage(imageData, 'JPEG', 15, y, imgWidth, imgHeight);
-                            y += imgHeight + 5; // Move down after the image
-                        }
-                    } catch (imgError) {
-                        console.error("Error adding image to PDF:", imgError);
-                        doc.text('Gagal menampilkan gambar.', 15, y);
-                        y += 10;
-                    }
-                    doc.line(10, y, doc.internal.pageSize.width - 10, y);
-                    y += 5;
-                });
             }
         }
 
         doc.save(`Daily_Report_${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}.pdf`);
-        window.alert('Laporan PDF berhasil dibuat!');
+        showCustomAlert('Laporan PDF berhasil dibuat!');
 
     } catch (error) {
-        window.alert('Gagal membuat laporan PDF. Silakan coba lagi. Detail: ' + error.message);
+        showCustomAlert('Gagal membuat laporan PDF. Silakan coba lagi. Detail: ' + error.message);
         console.error('PDF generation error:', error);
     } finally {
         hideLoading();
@@ -756,13 +797,13 @@ async function updateUserData(username, pin, firstLoginDone = null) {
         }
         const result = await response.json();
         if (result.status === 'success') {
-            window.alert(result.message);
+            showCustomAlert(result.message);
             return true;
         } else {
             throw new Error(result.message || 'Gagal memperbarui data pengguna.');
         }
     } catch (error) {
-        window.alert('Terjadi kesalahan saat memperbarui PIN. Silakan coba lagi. Detail: ' + error.message);
+        showCustomAlert('Terjadi kesalahan saat memperbarui PIN. Silakan coba lagi. Detail: ' + error.message);
         console.error('Error updating user data:', error);
         return false;
     } finally {
@@ -808,6 +849,29 @@ closeArchiveListModalButton.addEventListener('click', closeArchiveListModal);
 archiveListModal.addEventListener('click', (e) => {
     if (e.target === archiveListModal) {
         closeArchiveListModal();
+    }
+});
+
+// NEW: Event listeners for custom alert/confirm modals
+customAlertOkButton.addEventListener('click', closeCustomModals);
+customConfirmOkButton.addEventListener('click', () => {
+    if (confirmCallback) {
+        confirmCallback(true);
+    }
+    closeCustomModals();
+});
+customConfirmCancelButton.addEventListener('click', () => {
+    if (confirmCallback) {
+        confirmCallback(false);
+    }
+    closeCustomModals();
+});
+
+// NEW: Event listener for image popup modal
+closeImagePopupModalButton.addEventListener('click', closeCustomModals);
+imagePopupModal.addEventListener('click', (e) => {
+    if (e.target === imagePopupModal) {
+        closeCustomModals();
     }
 });
 
@@ -905,7 +969,7 @@ attachmentTypeRadios.forEach(radio => {
     });
 });
 
-// NEW: Event listener for file input to show preview
+// NEW: Event listener for file input to show preview (now handles Base64 for preview only)
 attachmentFileInput.addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -924,7 +988,7 @@ attachmentFileInput.addEventListener('change', (e) => {
 // NEW: Event listener for URL input to show preview
 attachmentLinkInput.addEventListener('input', () => {
     const url = attachmentLinkInput.value;
-    if (url.startsWith('http')) {
+    if (url.match(/\.(jpeg|jpg|gif|png|webp)$/i) || url.startsWith('http')) {
         imagePreview.src = url;
         imagePreviewContainer.style.display = 'flex';
     } else {
@@ -961,49 +1025,57 @@ taskForm.addEventListener('submit', async (e) => {
     const selectedPICs = Array.from(picTeamSelect.options).filter(option => option.selected).map(option => option.value);
     const picTeamValue = selectedPICs.join(', ');
 
-    let attachmentValue = '';
+    let finalAttachmentUrl = '';
     const selectedAttachmentType = document.querySelector('input[name="attachment-type"]:checked').value;
-    if (selectedAttachmentType === 'upload' && attachmentFileInput.files.length > 0) {
-        // Use the base64 string from the preview
-        attachmentValue = imagePreview.src;
-    } else if (selectedAttachmentType === 'url' && attachmentLinkInput.value.trim() !== '') {
-        attachmentValue = attachmentLinkInput.value.trim();
-    }
-
-
-    const taskData = {
-        'Task ID': taskIdInput.value,
-        'Project Name': projectNameInput.value.trim(),
-        'Activity / Task': activityInput.value.trim(),
-        'Platform': platformValue,
-        'Work Status': workStatusSelect.value,
-        'Approval Status': approvalStatusSelect.value,
-        'Notes': notesInput.value.trim(),
-        'PIC / Team': picTeamValue,
-        'Deadline': deadlineInput.value,
-        'Priority': prioritySelect.value,
-        'Attachment Link': attachmentValue // NEW: Use the processed attachment value
-    };
     
-    // Debugging: Log data tugas yang akan dikirim
-    console.log('Action:', action);
-    console.log('Task data to be sent:', taskData);
-
-
-    if (workStatusSelect.value === 'Final Touch') {
-        taskData['Progress (%)'] = finalTouchProgressInput.value;
-    } else {
-        taskData['Progress (%)'] = '';
-    }
-
-
-    if (!taskData['Activity / Task'] || !taskData['PIC / Team']) {
-        window.alert('Aktivitas dan PIC / Tim harus diisi.');
-        return;
-    }
-
     showLoading();
+
     try {
+        if (selectedAttachmentType === 'upload' && attachmentFileInput.files.length > 0) {
+            const formData = new FormData();
+            formData.append('image', attachmentFileInput.files[0]);
+
+            const uploadResponse = await fetch(UPLOAD_HANDLER_URL, {
+                method: 'POST',
+                body: formData
+            });
+
+            const uploadResult = await uploadResponse.json();
+
+            if (uploadResult.status === 'success') {
+                finalAttachmentUrl = uploadResult.imageUrl;
+            } else {
+                throw new Error(uploadResult.message || 'Gagal mengunggah gambar.');
+            }
+        } else if (selectedAttachmentType === 'url' && attachmentLinkInput.value.trim() !== '') {
+            finalAttachmentUrl = attachmentLinkInput.value.trim();
+        }
+
+        const taskData = {
+            'Task ID': taskIdInput.value,
+            'Project Name': projectNameInput.value.trim(),
+            'Activity / Task': activityInput.value.trim(),
+            'Platform': platformValue,
+            'Work Status': workStatusSelect.value,
+            'Approval Status': approvalStatusSelect.value,
+            'Notes': notesInput.value.trim(),
+            'PIC / Team': picTeamValue,
+            'Deadline': deadlineInput.value,
+            'Priority': prioritySelect.value,
+            'Attachment Link': finalAttachmentUrl
+        };
+        
+        if (workStatusSelect.value === 'Final Touch') {
+            taskData['Progress (%)'] = finalTouchProgressInput.value;
+        } else {
+            taskData['Progress (%)'] = '';
+        }
+
+        if (!taskData['Activity / Task'] || !taskData['PIC / Team']) {
+            showCustomAlert('Aktivitas dan PIC / Tim harus diisi.');
+            return;
+        }
+        
         const response = await fetch(DATA_HANDLER_URL, {
             method: 'POST',
             headers: {
@@ -1012,7 +1084,6 @@ taskForm.addEventListener('submit', async (e) => {
             body: JSON.stringify({ action: action, task: taskData })
         });
         
-        // Debugging: Log respons mentah dari server
         const responseText = await response.text();
         console.log('Raw server response:', responseText);
 
@@ -1020,22 +1091,20 @@ taskForm.addEventListener('submit', async (e) => {
             throw new Error(`HTTP error! status: ${response.status}. Response: ${responseText}`);
         }
 
-        const result = JSON.parse(responseText); // Parse manual jika response.text() sudah diambil
+        const result = JSON.parse(responseText);
 
         if (result.status === 'success') {
-            window.alert('Tugas berhasil ' + (isEditing ? 'diperbarui' : 'ditambahkan') + '!');
+            showCustomAlert('Tugas berhasil ' + (isEditing ? 'diperbarui' : 'ditambahkan') + '!');
             hideTaskForm();
-            // Panggil fetchTasks() lagi untuk memuat ulang data terbaru
             fetchTasks(); 
         } else {
-            window.alert('Gagal ' + (isEditing ? 'memperbarui' : 'menambahkan') + ' tugas: ' + result.message);
+            showCustomAlert('Gagal ' + (isEditing ? 'memperbarui' : 'menambahkan') + ' tugas: ' + result.message);
             console.error('API Error:', result.message);
         }
     } catch (error) {
-        window.alert('Terjadi kesalahan saat menyimpan tugas. Silakan coba lagi. Detail: ' + error.message);
+        showCustomAlert('Terjadi kesalahan saat menyimpan tugas. Silakan coba lagi. Detail: ' + error.message);
         console.error('Submit error:', error);
     } finally {
-        // PERBAIKAN PENTING: Pastikan loading overlay disembunyikan
         hideLoading();
     }
 });
