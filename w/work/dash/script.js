@@ -1,38 +1,38 @@
 // File: public_html/w/work/dash/script.js
-// Deskripsi: Logika JavaScript untuk halaman dashboard Task Tracker.
-// Perbaikan: Menambahkan logika untuk fitur archive, restore, dan status "Done" baru.
-// Perbaikan: Menambahkan fitur upload gambar atau URL dan menampilkan gambar di laporan PDF.
-// Perbaikan: Mengganti notifikasi bawaan browser dengan modal kustom dan menambahkan popup gambar.
-// Perbaikan: Menambahkan margin di laporan PDF agar tidak terlalu rapat.
-// Perbaikan: Menyesuaikan lebar kolom pada laporan PDF dan memperbesar ukuran font.
-// Perbaikan: Fungsionalitas upload gambar diubah agar menyimpan file ke server dan menyimpan URL-nya.
+// Deskripsi: Logika JavaScript untuk halaman dashboard Task Tracker yang diperbarui.
+// Mengimplementasikan UI dari Dailish (list, filter, search, settings panel).
 
 // --- KONSTANTA ---
-// Ganti dengan URL proxy PHP baru Anda
 const APPS_SCRIPT_PROXY_URL = '../apps_script_proxy.php';
-const PIN_MANAGER_URL = '../pin_manager.php'; // Path ke file pin_manager.php
-const TASK_QUEUE_URL = '../task_queue.json'; // Mengambil data dari JSON lokal
-const DATA_HANDLER_URL = '../data_handler.php'; // URL baru untuk handler data
-const UPLOAD_HANDLER_URL = '../upload_handler.php'; // NEW: URL untuk file upload
+const PIN_MANAGER_URL = '../pin_manager.php';
+const DATA_HANDLER_URL = '../data_handler.php';
+const UPLOAD_HANDLER_URL = '../upload_handler.php';
 const SESSION_KEY = 'loggedInUser';
-const SESSION_DURATION_MS = 12 * 60 * 60 * 1000; // 12 jam dalam milidetik
+const SESSION_DURATION_MS = 12 * 60 * 60 * 1000;
+const THEME_KEY = 'appTheme';
 
 // Elemen DOM
-const loggedInUsernameSpan = document.getElementById('loggedInUsername');
+const usernameDisplay = document.getElementById('username-display');
+const userAvatar = document.getElementById('user-avatar');
 const logoutButton = document.getElementById('logoutButton');
 const setPinDashboardText = document.getElementById('setPinDashboardText');
-const allTasksTab = document.getElementById('allTasksTab');
-const myTasksTab = document.getElementById('myTasksTab');
 const archiveTasksText = document.getElementById('archiveTasksText');
-const addTaskButton = document.getElementById('addTaskButton');
 const generateReportButton = document.getElementById('generateReportButton');
-const taskTableBody = document.getElementById('taskTableBody');
-const dashboardContent = document.getElementById('dashboardContent');
+const addTaskButton = document.getElementById('addTaskButton');
+const taskList = document.getElementById('task-list');
+const emptyState = document.getElementById('empty-state');
+const dashboardMainContent = document.getElementById('dashboard-main-content'); // Fix: Mengganti dashboardContent
 const taskFormSection = document.getElementById('taskFormSection');
 const modalTitle = document.getElementById('modalTitle');
 const taskForm = document.getElementById('taskForm');
 const loadingOverlay = document.getElementById('loadingOverlay');
-const mainFooter = document.getElementById('mainFooter');
+const hamburgerMenu = document.getElementById('hamburger-menu');
+const settingsPanel = document.getElementById('settings-panel');
+const closeSettingsButton = document.getElementById('close-settings');
+const searchButton = document.getElementById('search-btn');
+const searchBar = document.getElementById('search-bar');
+const searchInput = document.getElementById('search-input');
+const sortSelect = document.getElementById('sort-select');
 
 // Input form modal (tugas)
 const taskIdInput = document.getElementById('taskId');
@@ -50,6 +50,7 @@ const notesInput = document.getElementById('notes');
 const picTeamSelect = document.getElementById('picTeam');
 const deadlineInput = document.getElementById('deadline');
 const prioritySelect = document.getElementById('priority');
+const cancelTaskButton = document.getElementById('cancelTaskButton');
 
 // Attachment DOM elements
 const attachmentTypeRadios = document.querySelectorAll('input[name="attachment-type"]');
@@ -60,7 +61,6 @@ const attachmentLinkInput = document.getElementById('attachmentLink');
 const imagePreviewContainer = document.getElementById('image-preview-container');
 const imagePreview = document.getElementById('image-preview');
 const removeImageButton = document.getElementById('remove-image-button');
-
 
 // Elemen modal Set/Change PIN dari Dashboard
 const setPinDashboardModal = document.getElementById('setPinDashboardModal');
@@ -89,29 +89,25 @@ const imagePopupModal = document.getElementById('imagePopupModal');
 const imagePopupImage = document.getElementById('imagePopupImage');
 const closeImagePopupModalButton = document.getElementById('closeImagePopupModalButton');
 
+// Filter control buttons
+const filterAllButton = document.getElementById('filter-all');
+const filterMyButton = document.getElementById('filter-my');
+const themeLightButton = document.getElementById('theme-light');
+const themeDarkButton = document.getElementById('theme-dark');
 
 let allTasks = [];
 let currentFilter = 'all';
+let currentSort = 'default';
+let currentSearch = '';
 let currentLoggedInUser = null;
-
 let confirmCallback = null;
 
 // --- FUNGSI NOTIFIKASI KUSTOM ---
-
-/**
- * Menampilkan modal alert kustom.
- * @param {string} message - Pesan yang akan ditampilkan.
- */
 function showCustomAlert(message) {
     customAlertMessage.textContent = message;
     customAlertModal.classList.add('active');
 }
 
-/**
- * Menampilkan modal konfirmasi kustom.
- * @param {string} message - Pesan konfirmasi yang akan ditampilkan.
- * @returns {Promise<boolean>} - Mengembalikan Promise yang resolve dengan true jika OK, false jika Batal.
- */
 function showCustomConfirm(message) {
     return new Promise(resolve => {
         customConfirmMessage.textContent = message;
@@ -120,28 +116,30 @@ function showCustomConfirm(message) {
     });
 }
 
-/**
- * Menutup semua modal notifikasi kustom.
- */
 function closeCustomModals() {
     customAlertModal.classList.remove('active');
     customConfirmModal.classList.remove('active');
     imagePopupModal.classList.remove('active');
 }
 
+// --- FUNGSI TEMA ---
+function setTheme(themeName) {
+    localStorage.setItem(THEME_KEY, themeName);
+    document.body.className = '';
+    document.body.classList.add(themeName);
+}
+function loadTheme() {
+    const savedTheme = localStorage.getItem(THEME_KEY) || 'light-mode';
+    setTheme(savedTheme);
+}
 
 // --- FUNGSI UTAMA ---
-
-/**
- * Memeriksa status login pengguna. Jika tidak valid, redirect ke halaman login.
- */
 async function checkLoginStatus() {
     const storedSession = localStorage.getItem(SESSION_KEY);
     if (!storedSession) {
         window.location.href = '../index.html';
         return null;
     }
-
     const sessionData = JSON.parse(storedSession);
     const currentTime = new Date().getTime();
 
@@ -150,25 +148,20 @@ async function checkLoginStatus() {
         window.location.href = '../index.html';
         return null;
     }
-
     sessionData.loginTime = currentTime;
     localStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
-
-    loggedInUsernameSpan.textContent = sessionData.username;
+    usernameDisplay.textContent = sessionData.username;
+    userAvatar.textContent = sessionData.username[0].toUpperCase();
     currentLoggedInUser = sessionData.username;
     return sessionData.username;
 }
 
-/**
- * Mengambil data tugas dari file JSON lokal, dengan penambahan cache-buster.
- */
 async function fetchTasks() {
     console.log("Fetching tasks from local JSON...");
     showLoading();
     try {
-        const url = `${TASK_QUEUE_URL}?t=${new Date().getTime()}`;
+        const url = `../task_queue.json?t=${new Date().getTime()}`;
         const response = await fetch(url);
-        
         if (!response.ok) {
             console.error(`Fetch tasks failed with status: ${response.status}`);
             if (response.status === 404) {
@@ -195,19 +188,16 @@ async function fetchTasks() {
     }
 }
 
-/**
- * Merender (menampilkan) tugas ke dalam tabel berdasarkan filter saat ini.
- */
 function renderTasks() {
-    console.log(`Rendering tasks with filter: ${currentFilter}`);
-    taskTableBody.innerHTML = '';
-    let tasksToDisplay = [];
+    console.log(`Rendering tasks with filter: ${currentFilter}, sort: ${currentSort}, search: ${currentSearch}`);
+    taskList.innerHTML = '';
+    
+    let tasksToDisplay = allTasks.filter(task => task['Work Status'] !== 'Archived');
 
-    if (currentFilter === 'all') {
-        tasksToDisplay = allTasks.filter(task => task['Work Status'] !== 'Archived');
-    } else if (currentFilter === 'my') {
-        tasksToDisplay = allTasks.filter(task => {
-            if (task['PIC / Team'] && task['Work Status'] !== 'Archived') {
+    // Menerapkan filter
+    if (currentFilter === 'my') {
+        tasksToDisplay = tasksToDisplay.filter(task => {
+            if (task['PIC / Team']) {
                 const picArray = task['PIC / Team'].split(',').map(p => p.trim());
                 return picArray.includes(currentLoggedInUser);
             }
@@ -215,21 +205,50 @@ function renderTasks() {
         });
     }
 
-    if (tasksToDisplay.length === 0) {
-        taskTableBody.innerHTML = '<tr><td colspan="10" style="text-align: center; padding: 20px;">Tidak ada tugas untuk ditampilkan.</td></tr>';
-        return;
+    // Menerapkan pencarian
+    if (currentSearch) {
+        const searchTerm = currentSearch.toLowerCase();
+        tasksToDisplay = tasksToDisplay.filter(task => {
+            return Object.values(task).some(value => 
+                String(value).toLowerCase().includes(searchTerm)
+            );
+        });
     }
 
+    // Menerapkan pengurutan
     tasksToDisplay.sort((a, b) => {
-        const dateA = new Date(a['Deadline']);
-        const dateB = new Date(b['Deadline']);
-        return dateA - dateB;
+        // Pinned tasks always on top
+        const isPinnedA = a.isPinned ? 1 : 0;
+        const isPinnedB = b.isPinned ? 1 : 0;
+        if (isPinnedA !== isPinnedB) {
+            return isPinnedB - isPinnedA;
+        }
+
+        if (currentSort === 'deadline') {
+            const dateA = a['Deadline'] ? new Date(a['Deadline']) : new Date('9999-12-31');
+            const dateB = b['Deadline'] ? new Date(b['Deadline']) : new Date('9999-12-31');
+            return dateA - dateB;
+        } else if (currentSort === 'priority') {
+            const priorityOrder = { 'High': 3, 'Medium': 2, 'Low': 1 };
+            const priorityA = priorityOrder[a['Priority']] || 0;
+            const priorityB = priorityOrder[b['Priority']] || 0;
+            return priorityB - priorityA; // Descending order
+        }
+        return 0; // Default order
     });
 
 
+    if (tasksToDisplay.length === 0) {
+        emptyState.style.display = 'block';
+        return;
+    }
+
+    emptyState.style.display = 'none';
+
     tasksToDisplay.forEach(task => {
-        const row = taskTableBody.insertRow();
-        row.dataset.taskId = task['Task ID'];
+        const taskItem = document.createElement('li');
+        taskItem.className = `task-item ${task.isPinned ? 'pinned' : ''}`;
+        taskItem.dataset.taskId = task['Task ID'];
 
         const getStatusBadgeClass = (status) => {
             switch (status) {
@@ -261,60 +280,90 @@ function renderTasks() {
             return items.length > 0 ? items.join(', ') : '-';
         };
 
-        let workStatusDisplay = task['Work Status'] || '-';
-        if (task['Work Status'] === 'Final Touch' && task['Progress (%)']) {
-            workStatusDisplay = `Final Touch (${task['Progress (%)']}%)`;
-        }
-        
-        let attachmentButton = '-';
+        const taskStatusDisplay = task['Work Status'] === 'Final Touch' && task['Progress (%)']
+                                 ? `${task['Work Status']} (${task['Progress (%)']}%)`
+                                 : task['Work Status'] || '-';
+
+        let attachmentButtonHtml = '';
         if (task['Attachment Link']) {
             if (task['Attachment Link'].match(/\.(jpeg|jpg|gif|png|webp)$/i)) {
-                attachmentButton = `<button class="button info-button view-attachment-button" data-type="image" data-link="${task['Attachment Link']}">Lihat Gambar</button>`;
+                attachmentButtonHtml = `<button class="task-btn view-attachment-button" data-type="image" data-link="${task['Attachment Link']}"><i class="fas fa-image"></i></button>`;
             } else if (task['Attachment Link'].startsWith('http')) {
-                attachmentButton = `<a href="${task['Attachment Link']}" target="_blank" class="button info-button" style="text-decoration: none;">Lihat Tautan</a>`;
+                attachmentButtonHtml = `<a href="${task['Attachment Link']}" target="_blank" class="task-btn" style="text-decoration: none;"><i class="fas fa-external-link-alt"></i></a>`;
             }
         }
 
-
-        row.innerHTML = `
-            <td>${task['Project Name'] || '-'}</td>
-            <td>${task['Activity / Task'] || '-'}</td>
-            <td>${formatMultiSelectDisplay(task['Platform'])}</td>
-            <td><span class="status-badge ${getStatusBadgeClass(task['Work Status'])}">${workStatusDisplay}</span></td>
-            <td><span class="status-badge ${getStatusBadgeClass(task['Approval Status'])}">${task['Approval Status'] || '-'}</span></td>
-            <td>${formatMultiSelectDisplay(task['PIC / Team'])}</td>
-            <td>${task['Deadline'] || '-'}</td>
-            <td><span class="priority-badge ${getPriorityBadgeClass(task['Priority'])}">${task['Priority'] || '-'}</span></td>
-            <td>${attachmentButton}</td>
-            <td class="actions">
-                <button class="button secondary-button edit-button" data-task-id="${task['Task ID']}">Edit</button>
-                ${task['Work Status'] !== 'Archived' ? `<button class="button danger-button archive-button" data-task-id="${task['Task ID']}">Archive</button>` : ''}
-            </td>
+        taskItem.innerHTML = `
+            <div class="task-header">
+                <div class="task-title-and-meta">
+                    <div style="display:flex; align-items: center; gap: 0.5rem;">
+                        <span class="task-title">${task['Activity / Task'] || '-'}</span>
+                        <div class="task-actions">
+                            <button class="task-btn pin-button" data-task-id="${task['Task ID']}">
+                                <i class="${task.isPinned ? 'fas' : 'far'} fa-thumbtack"></i>
+                            </button>
+                            <button class="task-btn edit-button" data-task-id="${task['Task ID']}"><i class="fas fa-edit"></i></button>
+                            <button class="task-btn archive-button" data-task-id="${task['Task ID']}"><i class="fas fa-box-archive"></i></button>
+                        </div>
+                    </div>
+                    <div class="task-meta">
+                        <div class="task-meta-item">
+                            <span class="status-badge ${getStatusBadgeClass(task['Work Status'])}">${taskStatusDisplay}</span>
+                        </div>
+                        <div class="task-meta-item">
+                             <span class="priority-badge ${getPriorityBadgeClass(task['Priority'])}"></span>
+                        </div>
+                        ${task['Deadline'] ? `<div class="task-meta-item"><i class="fas fa-calendar-alt"></i><span>${task['Deadline']}</span></div>` : ''}
+                        ${attachmentButtonHtml ? `<div class="task-meta-item">${attachmentButtonHtml}</div>` : ''}
+                        ${task.isPinned && task.pinnedBy ? `<div class="task-meta-item"><i class="fas fa-user-tag"></i><span>Disematkan oleh ${task.pinnedBy}</span></div>` : ''}
+                    </div>
+                </div>
+            </div>
+            <div class="task-details">
+                <div class="task-details-content">
+                    <p class="task-details-text"><strong>Proyek:</strong> ${task['Project Name'] || '-'}</p>
+                    <p class="task-details-text"><strong>Platform:</strong> ${formatMultiSelectDisplay(task['Platform'])}</p>
+                    <p class="task-details-text"><strong>Approval:</strong> <span class="status-badge ${getStatusBadgeClass(task['Approval Status'])}">${task['Approval Status'] || '-'}</span></p>
+                    <p class="task-details-text"><strong>PIC:</strong> ${formatMultiSelectDisplay(task['PIC / Team'])}</p>
+                    ${task['Notes'] ? `<p class="task-details-text"><strong>Catatan:</strong> ${task['Notes']}</p>` : ''}
+                </div>
+            </div>
         `;
-
-        row.querySelector('.edit-button').addEventListener('click', () => showTaskForm(task));
-        const archiveButton = row.querySelector('.archive-button');
-        if (archiveButton) {
-            archiveButton.addEventListener('click', () => archiveTask(task['Task ID']));
-        }
         
-        const viewButton = row.querySelector('.view-attachment-button');
+        // Event listener untuk expand/collapse detail
+        taskItem.querySelector('.task-header').addEventListener('click', (e) => {
+            // Jangan expand/collapse jika mengklik tombol di dalam header
+            if (e.target.closest('.task-actions') || e.target.closest('.task-btn')) {
+                return;
+            }
+            taskItem.classList.toggle('expanded');
+        });
+
+        taskItem.querySelector('.edit-button').addEventListener('click', () => showTaskForm(task));
+        taskItem.querySelector('.archive-button').addEventListener('click', (e) => {
+            e.stopPropagation();
+            archiveTask(task['Task ID']);
+        });
+        taskItem.querySelector('.pin-button').addEventListener('click', (e) => {
+            e.stopPropagation();
+            togglePinTask(task['Task ID']);
+        });
+        const viewButton = taskItem.querySelector('.view-attachment-button');
         if (viewButton) {
             viewButton.addEventListener('click', (e) => {
-                const link = e.target.dataset.link;
+                e.stopPropagation();
+                const link = e.target.dataset.link || e.target.parentElement.dataset.link;
                 if (link) {
                     imagePopupImage.src = link;
                     imagePopupModal.classList.add('active');
                 }
             });
         }
+        
+        taskList.appendChild(taskItem);
     });
 }
 
-/**
- * Membuka form untuk menambah atau mengedit tugas (menggantikan modal).
- * @param {Object} taskData - Data tugas yang akan diedit (opsional, untuk mode edit).
- */
 function showTaskForm(taskData = null) {
     taskForm.reset();
     finalTouchProgressGroup.style.display = 'none';
@@ -325,9 +374,8 @@ function showTaskForm(taskData = null) {
     imagePreview.src = '#';
     attachmentFileInput.value = '';
     attachmentLinkInput.value = '';
-
-    dashboardContent.classList.add('hidden');
-    mainFooter.classList.add('hidden');
+    
+    dashboardMainContent.style.display = 'none';
     taskFormSection.style.display = 'block';
 
     if (taskData) {
@@ -355,7 +403,6 @@ function showTaskForm(taskData = null) {
             attachmentUploadGroup.style.display = 'block';
             attachmentUrlGroup.style.display = 'none';
         }
-
 
         workStatusSelect.value = taskData['Work Status'] || 'Editing';
         if (workStatusSelect.value === 'Final Touch') {
@@ -415,46 +462,31 @@ function showTaskForm(taskData = null) {
     }
 }
 
-/**
- * Menyembunyikan form tugas dan menampilkan dashboard.
- */
 function hideTaskForm() {
     taskFormSection.style.display = 'none';
-    dashboardContent.classList.remove('hidden');
-    mainFooter.classList.remove('hidden');
+    dashboardMainContent.style.display = 'flex';
     attachmentFileInput.value = '';
     attachmentLinkInput.value = '';
     imagePreviewContainer.style.display = 'none';
     imagePreview.src = '#';
 }
 
-/**
- * Fungsi untuk mengarsipkan tugas.
- * @param {string} taskId - ID tugas yang akan diarsipkan.
- */
 async function archiveTask(taskId) {
     const isConfirmed = await showCustomConfirm('Apakah Anda yakin ingin mengarsipkan tugas ini?');
-    if (!isConfirmed) {
-        return;
-    }
+    if (!isConfirmed) return;
 
     showLoading();
     try {
         const response = await fetch(DATA_HANDLER_URL, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ action: 'archive', taskId: taskId })
         });
-
         if (!response.ok) {
             const errorText = await response.text();
             throw new Error(`HTTP error! status: ${response.status}. Response: ${errorText}`);
         }
-
         const result = await response.json();
-
         if (result.status === 'success') {
             showCustomAlert('Tugas berhasil diarsipkan!');
             fetchTasks();
@@ -470,28 +502,19 @@ async function archiveTask(taskId) {
     }
 }
 
-/**
- * Fungsi untuk mengembalikan tugas dari arsip.
- * @param {string} taskId - ID tugas yang akan dikembalikan.
- */
 async function restoreTask(taskId) {
     showLoading();
     try {
         const response = await fetch(DATA_HANDLER_URL, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ action: 'restore', taskId: taskId })
         });
-
         if (!response.ok) {
             const errorText = await response.text();
             throw new Error(`HTTP error! status: ${response.status}. Response: ${errorText}`);
         }
-
         const result = await response.json();
-
         if (result.status === 'success') {
             showCustomAlert('Tugas berhasil dikembalikan!');
             fetchTasks(); 
@@ -508,28 +531,20 @@ async function restoreTask(taskId) {
     }
 }
 
-
-/**
- * Membuka modal daftar arsip.
- */
 async function openArchiveListModal() {
+    settingsPanel.classList.remove('active'); // Close settings panel
     showLoading();
     try {
         const response = await fetch(DATA_HANDLER_URL, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ action: 'getArchivedTasks' })
         });
-
         if (!response.ok) {
             const errorText = await response.text();
             throw new Error(`HTTP error! status: ${response.status}. Response: ${errorText}`);
         }
-        
         const result = await response.json();
-
         archivedProjectsList.innerHTML = '';
         if (result.status === 'success' && result.data && result.data.length > 0) {
             const ul = document.createElement('ul');
@@ -555,18 +570,12 @@ async function openArchiveListModal() {
     }
 }
 
-/**
- * Menutup modal daftar arsip.
- */
 function closeArchiveListModal() {
     archiveListModal.classList.remove('active');
 }
 
-
-/**
- * Fungsi untuk membuat laporan harian dalam format PDF.
- */
 async function generateDailyReportPdf() {
+    settingsPanel.classList.remove('active'); // Close settings panel
     showLoading();
     try {
         const { jsPDF } = window.jspdf;
@@ -591,9 +600,6 @@ async function generateDailyReportPdf() {
         const activeTasks = allTasks.filter(task =>
             task['Work Status'] !== 'Archived'
         );
-
-        console.log("All tasks from spreadsheet:", allTasks);
-        console.log("Active tasks for PDF report (filtered):", activeTasks);
 
         if (activeTasks.length === 0) {
             doc.text('Tidak ada tugas aktif untuk dilaporkan hari ini.', 10, y + 10);
@@ -745,45 +751,30 @@ async function generateDailyReportPdf() {
 }
 
 
-/**
- * Membuka modal untuk mengatur/mengubah PIN.
- */
 function openSetPinDashboardModal() {
     dashboardNewPinInput.value = '';
     dashboardPinErrorMessage.textContent = '';
     setPinDashboardModal.classList.add('active');
 }
 
-/**
- * Menutup modal mengatur/mengubah PIN.
- */
 function closeSetPinDashboardModal() {
     setPinDashboardModal.classList.remove('active');
 }
 
-/**
- * Menampilkan overlay loading.
- */
 function showLoading() {
     loadingOverlay.classList.add('active');
 }
 
-/**
- * Menyembunyikan overlay loading.
- */
 function hideLoading() {
     loadingOverlay.classList.remove('active');
 }
 
-// Fungsi untuk memperbarui data pengguna via pin_manager.php
 async function updateUserData(username, pin, firstLoginDone = null) {
     showLoading();
     try {
         const response = await fetch(PIN_MANAGER_URL, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 action: 'updatePin',
                 username: username,
@@ -811,31 +802,42 @@ async function updateUserData(username, pin, firstLoginDone = null) {
     }
 }
 
+function togglePinTask(taskId) {
+    console.log(`Attempting to toggle pin for task ID: ${taskId}`);
+    const taskIndex = allTasks.findIndex(t => t['Task ID'] === taskId);
+    if (taskIndex > -1) {
+        const currentTask = allTasks[taskIndex];
+        const isPinned = !currentTask.isPinned;
+        currentTask.isPinned = isPinned;
+        currentTask.pinnedBy = isPinned ? currentLoggedInUser : null;
+        
+        // Logika backend untuk update pin task
+        console.log(`Task ${taskId} is now ${isPinned ? 'pinned' : 'unpinned'} by ${currentTask.pinnedBy}.`);
+        console.warn('Backend update is required for this feature to be persistent across sessions.');
+
+        // Update local data and re-render
+        renderTasks();
+    }
+}
+
 
 // --- EVENT LISTENERS ---
-
-// Saat halaman dimuat
 document.addEventListener('DOMContentLoaded', async () => {
+    loadTheme();
     currentLoggedInUser = await checkLoginStatus();
     if (currentLoggedInUser) {
         fetchTasks();
     }
 });
 
-// Logout
 logoutButton.addEventListener('click', () => {
     localStorage.removeItem(SESSION_KEY);
     window.location.href = '../index.html';
 });
 
-// Buka modal Set/Ubah PIN dari footer (sekarang teks)
 setPinDashboardText.addEventListener('click', openSetPinDashboardModal);
-
-// Buka modal Arsip Tugas dari footer
 archiveTasksText.addEventListener('click', openArchiveListModal);
 
-
-// Tutup modal Set/Ubah PIN
 closePinDashboardModalButton.addEventListener('click', closeSetPinDashboardModal);
 cancelDashboardPinButton.addEventListener('click', closeSetPinDashboardModal);
 setPinDashboardModal.addEventListener('click', (e) => {
@@ -844,7 +846,6 @@ setPinDashboardModal.addEventListener('click', (e) => {
     }
 });
 
-// Tutup modal Arsip Tugas
 closeArchiveListModalButton.addEventListener('click', closeArchiveListModal);
 archiveListModal.addEventListener('click', (e) => {
     if (e.target === archiveListModal) {
@@ -852,7 +853,6 @@ archiveListModal.addEventListener('click', (e) => {
     }
 });
 
-// NEW: Event listeners for custom alert/confirm modals
 customAlertOkButton.addEventListener('click', closeCustomModals);
 customConfirmOkButton.addEventListener('click', () => {
     if (confirmCallback) {
@@ -867,7 +867,6 @@ customConfirmCancelButton.addEventListener('click', () => {
     closeCustomModals();
 });
 
-// NEW: Event listener for image popup modal
 closeImagePopupModalButton.addEventListener('click', closeCustomModals);
 imagePopupModal.addEventListener('click', (e) => {
     if (e.target === imagePopupModal) {
@@ -875,8 +874,6 @@ imagePopupModal.addEventListener('click', (e) => {
     }
 });
 
-
-// Simpan PIN dari dashboard
 saveDashboardPinButton.addEventListener('click', async () => {
     const newPin = dashboardNewPinInput.value.trim();
     dashboardPinErrorMessage.textContent = '';
@@ -885,43 +882,69 @@ saveDashboardPinButton.addEventListener('click', async () => {
         dashboardPinErrorMessage.textContent = 'PIN harus 4 digit angka, atau kosongkan untuk menghapus.';
         return;
     }
-
     const pinToSave = newPin === '' ? null : newPin;
-
     const success = await updateUserData(currentLoggedInUser, pinToSave);
     if (success) {
         closeSetPinDashboardModal();
     }
 });
 
+// NEW: Event listeners untuk tema
+themeLightButton.addEventListener('click', () => setTheme('light-mode'));
+themeDarkButton.addEventListener('click', () => setTheme('dark-mode'));
 
-// Tab switching
-allTasksTab.addEventListener('click', () => {
-    allTasksTab.classList.add('active');
-    myTasksTab.classList.remove('active');
+// NEW: Event listeners untuk filter dan sort
+filterAllButton.addEventListener('click', () => {
     currentFilter = 'all';
-    fetchTasks();
+    searchInput.value = ''; // Reset search input
+    currentSearch = ''; // Reset search term
+    document.querySelectorAll('.filter-controls button').forEach(btn => btn.classList.remove('active'));
+    filterAllButton.classList.add('active');
+    renderTasks();
 });
 
-myTasksTab.addEventListener('click', () => {
-    myTasksTab.classList.add('active');
-    allTasksTab.classList.remove('active');
+filterMyButton.addEventListener('click', () => {
     currentFilter = 'my';
-    fetchTasks();
+    searchInput.value = ''; // Reset search input
+    currentSearch = ''; // Reset search term
+    document.querySelectorAll('.filter-controls button').forEach(btn => btn.classList.remove('active'));
+    filterMyButton.classList.add('active');
+    renderTasks();
 });
 
 
-// Buka form tambah tugas
+sortSelect.addEventListener('change', (e) => {
+    currentSort = e.target.value;
+    renderTasks();
+});
+
+// NEW: Event listeners untuk search
+searchButton.addEventListener('click', () => {
+    searchBar.style.display = searchBar.style.display === 'block' ? 'none' : 'block';
+    searchInput.focus();
+});
+searchInput.addEventListener('input', (e) => {
+    currentSearch = e.target.value;
+    renderTasks();
+});
+
+// NEW: Event listeners untuk settings panel
+hamburgerMenu.addEventListener('click', () => {
+    settingsPanel.classList.add('active');
+});
+closeSettingsButton.addEventListener('click', () => {
+    settingsPanel.classList.remove('active');
+});
+settingsPanel.addEventListener('click', (e) => {
+    if (e.target === settingsPanel) {
+        settingsPanel.classList.remove('active');
+    }
+});
+
+
 addTaskButton.addEventListener('click', () => showTaskForm());
-
-// Tombol Batal di form tugas
-document.getElementById('cancelTaskButton').addEventListener('click', hideTaskForm);
-
-// Tombol Generate Report
+cancelTaskButton.addEventListener('click', hideTaskForm);
 generateReportButton.addEventListener('click', generateDailyReportPdf);
-
-
-// Event listener untuk Work Status agar slider Final Touch muncul/sembunyi
 workStatusSelect.addEventListener('change', () => {
     const selectedValue = workStatusSelect.value;
     if (selectedValue === 'Final Touch') {
@@ -935,12 +958,10 @@ workStatusSelect.addEventListener('change', () => {
     }
 });
 
-// Event listener untuk slider Final Touch
 finalTouchProgressInput.addEventListener('input', () => {
     finalTouchProgressValueSpan.textContent = finalTouchProgressInput.value;
 });
 
-// Event listener untuk Platform agar input 'Other' muncul/sembunyi
 platformSelect.addEventListener('change', () => {
     const selectedOptions = Array.from(platformSelect.options).filter(option => option.selected).map(option => option.value);
     if (selectedOptions.includes('Other')) {
@@ -951,7 +972,6 @@ platformSelect.addEventListener('change', () => {
     }
 });
 
-// NEW: Event listener for attachment type radio buttons
 attachmentTypeRadios.forEach(radio => {
     radio.addEventListener('change', (e) => {
         if (e.target.value === 'upload') {
@@ -961,7 +981,6 @@ attachmentTypeRadios.forEach(radio => {
             attachmentUploadGroup.style.display = 'none';
             attachmentUrlGroup.style.display = 'block';
         }
-        // Clear inputs and hide preview when switching
         attachmentFileInput.value = '';
         attachmentLinkInput.value = '';
         imagePreviewContainer.style.display = 'none';
@@ -969,7 +988,6 @@ attachmentTypeRadios.forEach(radio => {
     });
 });
 
-// NEW: Event listener for file input to show preview (now handles Base64 for preview only)
 attachmentFileInput.addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -985,7 +1003,6 @@ attachmentFileInput.addEventListener('change', (e) => {
     }
 });
 
-// NEW: Event listener for URL input to show preview
 attachmentLinkInput.addEventListener('input', () => {
     const url = attachmentLinkInput.value;
     if (url.match(/\.(jpeg|jpg|gif|png|webp)$/i) || url.startsWith('http')) {
@@ -997,7 +1014,6 @@ attachmentLinkInput.addEventListener('input', () => {
     }
 });
 
-// NEW: Event listener to remove image
 removeImageButton.addEventListener('click', () => {
     attachmentFileInput.value = '';
     attachmentLinkInput.value = '';
@@ -1009,7 +1025,6 @@ removeImageButton.addEventListener('click', () => {
 });
 
 
-// Submit form tambah/edit tugas
 taskForm.addEventListener('submit', async (e) => {
     e.preventDefault();
 
@@ -1073,14 +1088,13 @@ taskForm.addEventListener('submit', async (e) => {
 
         if (!taskData['Activity / Task'] || !taskData['PIC / Team']) {
             showCustomAlert('Aktivitas dan PIC / Tim harus diisi.');
+            hideLoading();
             return;
         }
         
         const response = await fetch(DATA_HANDLER_URL, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ action: action, task: taskData })
         });
         
