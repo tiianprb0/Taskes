@@ -3,60 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Creative Team Task Tracker</title>
+    <title>Taskes - Creative Team Task Tracker</title>
     <!-- Memuat font Playfair Display dan Plus Jakarta Sans dari Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Plus+Jakarta+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Memuat Font Awesome untuk ikon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <!-- Memuat file CSS utama (path relatif) -->
     <link rel="stylesheet" href="../style.css">
-    <!-- Font Awesome untuk ikon (hanya jika masih ada ikon yang digunakan, atau bisa dihapus jika tidak ada sama sekali) -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
     <div class="container">
-        <!-- Konten Dashboard Utama -->
-        <div id="dashboardContent" class="dashboard-content-wrapper">
-            <div class="top-header-actions">
-                <span class="user-info-text">Halo, <span id="loggedInUsername" class="user-display"></span>!</span>
-                <button id="logoutButton" class="text-button">Logout</button>
+        <!-- Dashboard Utama -->
+        <div id="dashboard-main-content">
+            <!-- HEADER: Mengganti header lama -->
+            <div class="header">
+                <div class="user-info">
+                    <div class="user-avatar" id="user-avatar">?</div>
+                    <div id="username-display">Pengguna</div>
+                </div>
+                <div class="header-controls">
+                    <!-- Tombol search dan menu hamburger -->
+                    <button class="search-btn" id="search-btn"><i class="fas fa-search"></i></button>
+                    <button class="hamburger-menu" id="hamburger-menu"><i class="fas fa-bars"></i></button>
+                </div>
             </div>
-            <h2 class="main-title">Task Dashboard</h2>
-
-            <div class="tabs">
-                <button class="tab-button active" id="allTasksTab">Semua Tugas</button>
-                <button class="tab-button" id="myTasksTab">Tugas Saya</button>
+    
+            <!-- TITLE BAR: Mengganti title lama dan tab -->
+            <div class="title-bar">
+                <h1>Dashboard</h1>
+                <select id="sort-select" class="sort-select">
+                    <option value="default">Urutkan Berdasarkan</option>
+                    <option value="deadline">Batas Waktu</option>
+                    <option value="priority">Prioritas</option>
+                </select>
             </div>
-
-            <div class="action-buttons-row">
-                <button id="addTaskButton" class="button primary-button">Tambah Tugas Baru</button>
-                <button id="generateReportButton" class="button info-button">Generate Daily Report</button>
+            
+            <!-- SEARCH BAR: Menambah search bar baru -->
+            <div class="search-bar" id="search-bar">
+                <input type="text" id="search-input" class="search-input" placeholder="Cari tugas...">
             </div>
-
-            <div class="task-table-container">
-                <table class="task-table">
-                    <thead>
-                        <tr>
-                            <th>Proyek</th>
-                            <th>Aktivitas</th>
-                            <th>Platform</th>
-                            <th>Work Status</th>
-                            <th>Approval Status</th>
-                            <th>PIC / Tim</th>
-                            <th>Batas Waktu</th>
-                            <th>Prioritas</th>
-                            <th>Lampiran</th>
-                            <th>Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody id="taskTableBody">
-                        <!-- Data tugas akan dimuat di sini oleh JavaScript -->
-                    </tbody>
-                </table>
+            
+            <!-- FILTER CONTROLS: Mengganti tab lama dengan tombol filter -->
+            <div class="filter-controls">
+                <button id="filter-all" class="active">Semua</button>
+                <button id="filter-my">Tugas Saya</button>
+                <!-- Tombol "Tambah Tugas Baru" dipindahkan di sini untuk kemudahan akses -->
+                <button id="addTaskButton" class="add-task-btn"><i class="fas fa-plus"></i> Tambah</button>
+            </div>
+            
+            <!-- TASK LIST: Mengganti tabel dengan daftar tugas -->
+            <ul class="task-list" id="task-list"></ul>
+            
+            <!-- EMPTY STATE: Menambahkan placeholder jika tidak ada tugas -->
+            <div class="empty-state" id="empty-state" style="display: none;">
+                <p>Tidak ada tugas ditemukan</p>
+                <small>Klik tombol Tambah untuk membuat tugas baru!</small>
             </div>
         </div>
 
-        <!-- Bagian Form Tambah/Edit Tugas (Akan ditampilkan/disembunyikan) -->
+        <!-- Form Tambah/Edit Tugas (tetap sama) -->
         <div id="taskFormSection" class="task-form-section" style="display: none;">
             <h3 id="modalTitle" class="form-section-title">Tambah Tugas Baru</h3>
             <form id="taskForm">
@@ -94,7 +101,6 @@
                         <option value="Take Konten">Take Konten</option>
                         <option value="Final Touch">Final Touch</option>
                         <option value="On Hold">On Hold</option>
-                        <!-- Perbaikan: Tambahkan status Done baru -->
                         <option value="Done">Done</option>
                     </select>
                 </div>
@@ -172,21 +178,41 @@
         </div>
     </div>
 
-    <!-- Footer -->
-    <footer id="mainFooter">
-        <div class="footer-content">
-            <div class="footer-links-left">
-                <span id="setPinDashboardText" class="footer-link">Atur/Ubah PIN</span>
-                <span class="footer-divider">|</span>
-                <span id="archiveTasksText" class="footer-link">Arsip Tugas</span>
-            </div>
-            <div class="footer-info-right">
-                <!-- Konten tambahan di kanan footer jika diperlukan -->
+    <!-- SETTINGS PANEL: Menggantikan footer lama -->
+    <div class="settings-panel" id="settings-panel">
+        <div class="settings-header">
+            <div class="settings-title">Pengaturan</div>
+            <button class="close-settings" id="close-settings"><i class="fas fa-times"></i></button>
+        </div>
+
+        <div class="settings-group">
+            <label class="settings-label">Tampilan</label>
+            <div class="theme-options">
+                <button class="theme-option theme-light" id="theme-light">
+                    <i class="fas fa-sun"></i>
+                </button>
+                <button class="theme-option theme-dark" id="theme-dark">
+                    <i class="fas fa-moon"></i>
+                </button>
             </div>
         </div>
-    </footer>
+        
+        <div class="settings-group">
+            <label class="settings-label">Akun</label>
+            <button class="settings-btn" id="setPinDashboardText"><i class="fas fa-key"></i> Atur/Ubah PIN</button>
+            <button class="settings-btn" id="logoutButton"><i class="fas fa-sign-out-alt"></i> Logout</button>
+        </div>
+        
+        <div class="settings-group">
+            <label class="settings-label">Manajemen Tugas</label>
+            <button class="settings-btn" id="archiveTasksText"><i class="fas fa-box-archive"></i> Lihat Arsip Tugas</button>
+            <button class="settings-btn" id="generateReportButton"><i class="fas fa-file-pdf"></i> Buat Laporan Harian</button>
+        </div>
+    </div>
 
-    <!-- Modal Set/Change PIN dari Dashboard (Masih Modal) -->
+
+    <!-- Semua modal (Set PIN, Arsip, Alert, Confirm, Image Popup) dipindahkan ke sini -->
+    <!-- Modal Set/Change PIN dari Dashboard -->
     <div id="setPinDashboardModal" class="modal-overlay">
         <div class="modal-content">
             <button class="close-button" id="closePinDashboardModalButton">&times;</button>
