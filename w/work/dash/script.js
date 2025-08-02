@@ -10,6 +10,7 @@ const UPLOAD_HANDLER_URL = '../upload_handler.php';
 const SESSION_KEY = 'loggedInUser';
 const SESSION_DURATION_MS = 12 * 60 * 60 * 1000;
 const THEME_KEY = 'appTheme';
+const PINNED_TASKS_KEY = 'pinnedTasks';
 
 // Elemen DOM
 const usernameDisplay = document.getElementById('username-display');
@@ -21,7 +22,7 @@ const generateReportButton = document.getElementById('generateReportButton');
 const addTaskButton = document.getElementById('addTaskButton');
 const taskList = document.getElementById('task-list');
 const emptyState = document.getElementById('empty-state');
-const dashboardMainContent = document.getElementById('dashboard-main-content'); // Fix: Mengganti dashboardContent
+const dashboardMainContent = document.getElementById('dashboard-main-content');
 const taskFormSection = document.getElementById('taskFormSection');
 const modalTitle = document.getElementById('modalTitle');
 const taskForm = document.getElementById('taskForm');
@@ -92,8 +93,7 @@ const closeImagePopupModalButton = document.getElementById('closeImagePopupModal
 // Filter control buttons
 const filterAllButton = document.getElementById('filter-all');
 const filterMyButton = document.getElementById('filter-my');
-const themeLightButton = document.getElementById('theme-light');
-const themeDarkButton = document.getElementById('theme-dark');
+const themeOptionsButtons = document.querySelectorAll('.theme-option');
 
 let allTasks = [];
 let currentFilter = 'all';
@@ -101,6 +101,7 @@ let currentSort = 'default';
 let currentSearch = '';
 let currentLoggedInUser = null;
 let confirmCallback = null;
+let pinnedTasks = {};
 
 // --- FUNGSI NOTIFIKASI KUSTOM ---
 function showCustomAlert(message) {
@@ -125,8 +126,10 @@ function closeCustomModals() {
 // --- FUNGSI TEMA ---
 function setTheme(themeName) {
     localStorage.setItem(THEME_KEY, themeName);
-    document.body.className = '';
-    document.body.classList.add(themeName);
+    document.body.setAttribute('data-theme', themeName);
+    
+    document.querySelectorAll('.theme-option').forEach(btn => btn.classList.remove('active'));
+    document.querySelector(`.theme-option[data-theme="${themeName}"]`).classList.add('active');
 }
 function loadTheme() {
     const savedTheme = localStorage.getItem(THEME_KEY) || 'light-mode';
@@ -157,13 +160,11 @@ async function checkLoginStatus() {
 }
 
 async function fetchTasks() {
-    console.log("Fetching tasks from local JSON...");
     showLoading();
     try {
         const url = `../task_queue.json?t=${new Date().getTime()}`;
         const response = await fetch(url);
         if (!response.ok) {
-            console.error(`Fetch tasks failed with status: ${response.status}`);
             if (response.status === 404) {
                 allTasks = [];
                 renderTasks();
@@ -179,17 +180,16 @@ async function fetchTasks() {
         }
         const result = await response.json();
         allTasks = result;
+        
         renderTasks();
     } catch (error) {
         showCustomAlert('Terjadi kesalahan saat mengambil data tugas. Silakan coba lagi. Detail: ' + error.message);
-        console.error('Fetch error:', error);
     } finally {
         hideLoading();
     }
 }
 
 function renderTasks() {
-    console.log(`Rendering tasks with filter: ${currentFilter}, sort: ${currentSort}, search: ${currentSearch}`);
     taskList.innerHTML = '';
     
     let tasksToDisplay = allTasks.filter(task => task['Work Status'] !== 'Archived');
@@ -217,7 +217,6 @@ function renderTasks() {
 
     // Menerapkan pengurutan
     tasksToDisplay.sort((a, b) => {
-        // Pinned tasks always on top
         const isPinnedA = a.isPinned ? 1 : 0;
         const isPinnedB = b.isPinned ? 1 : 0;
         if (isPinnedA !== isPinnedB) {
@@ -232,9 +231,9 @@ function renderTasks() {
             const priorityOrder = { 'High': 3, 'Medium': 2, 'Low': 1 };
             const priorityA = priorityOrder[a['Priority']] || 0;
             const priorityB = priorityOrder[b['Priority']] || 0;
-            return priorityB - priorityA; // Descending order
+            return priorityB - priorityA;
         }
-        return 0; // Default order
+        return 0;
     });
 
 
@@ -247,7 +246,8 @@ function renderTasks() {
 
     tasksToDisplay.forEach(task => {
         const taskItem = document.createElement('li');
-        taskItem.className = `task-item ${task.isPinned ? 'pinned' : ''}`;
+        const isTaskPinned = task.isPinned || false;
+        taskItem.className = `task-item ${isTaskPinned ? 'pinned' : ''}`;
         taskItem.dataset.taskId = task['Task ID'];
 
         const getStatusBadgeClass = (status) => {
@@ -283,57 +283,91 @@ function renderTasks() {
         const taskStatusDisplay = task['Work Status'] === 'Final Touch' && task['Progress (%)']
                                  ? `${task['Work Status']} (${task['Progress (%)']}%)`
                                  : task['Work Status'] || '-';
+        
+        let formattedDeadline = '';
+        if (task['Deadline']) {
+            const dateObj = new Date(task['Deadline']);
+            if (!isNaN(dateObj.getTime())) {
+                const day = String(dateObj.getDate()).padStart(2, '0');
+                const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+                formattedDeadline = `${day}/${month}`;
+            }
+        }
+
+        let pinnedByHtml = '';
+        if (isTaskPinned && task.pinnedBy) {
+            pinnedByHtml = `
+            <div class="task-meta-item">
+                <i class="fas fa-user-tag"></i><span>Disematkan oleh ${task.pinnedBy}</span>
+            </div>
+            `;
+        }
 
         let attachmentButtonHtml = '';
         if (task['Attachment Link']) {
             if (task['Attachment Link'].match(/\.(jpeg|jpg|gif|png|webp)$/i)) {
-                attachmentButtonHtml = `<button class="task-btn view-attachment-button" data-type="image" data-link="${task['Attachment Link']}"><i class="fas fa-image"></i></button>`;
+                attachmentButtonHtml = `
+                    <p class="task-details-text">
+                        <strong>Lampiran:</strong>
+                        <button class="task-btn view-attachment-button" data-type="image" data-link="${task['Attachment Link']}">
+                           <i class="fas fa-image"></i>
+                        </button>
+                    </p>`;
             } else if (task['Attachment Link'].startsWith('http')) {
-                attachmentButtonHtml = `<a href="${task['Attachment Link']}" target="_blank" class="task-btn" style="text-decoration: none;"><i class="fas fa-external-link-alt"></i></a>`;
+                attachmentButtonHtml = `
+                    <p class="task-details-text">
+                        <strong>Lampiran:</strong>
+                        <a href="${task['Attachment Link']}" target="_blank" class="task-btn">
+                            <i class="fas fa-external-link-alt"></i>
+                        </a>
+                    </p>`;
             }
+        }
+        
+        let detailsContent = '';
+        if (task['Notes']) {
+            detailsContent += `<p class="task-details-text"><strong>Catatan:</strong> ${task['Notes']}</p>`;
+        }
+        if (attachmentButtonHtml) {
+            detailsContent += attachmentButtonHtml;
         }
 
         taskItem.innerHTML = `
             <div class="task-header">
                 <div class="task-title-and-meta">
-                    <div style="display:flex; align-items: center; gap: 0.5rem;">
-                        <span class="task-title">${task['Activity / Task'] || '-'}</span>
-                        <div class="task-actions">
-                            <button class="task-btn pin-button" data-task-id="${task['Task ID']}">
-                                <i class="${task.isPinned ? 'fas' : 'far'} fa-thumbtack"></i>
-                            </button>
-                            <button class="task-btn edit-button" data-task-id="${task['Task ID']}"><i class="fas fa-edit"></i></button>
-                            <button class="task-btn archive-button" data-task-id="${task['Task ID']}"><i class="fas fa-box-archive"></i></button>
-                        </div>
-                    </div>
+                    <span class="task-title">${task['Project Name'] || '-'}</span>
                     <div class="task-meta">
+                        <div class="task-meta-item">
+                            <span class="priority-text-badge ${getPriorityBadgeClass(task['Priority'])}">${task['Priority'] || '-'}</span>
+                        </div>
                         <div class="task-meta-item">
                             <span class="status-badge ${getStatusBadgeClass(task['Work Status'])}">${taskStatusDisplay}</span>
                         </div>
-                        <div class="task-meta-item">
-                             <span class="priority-badge ${getPriorityBadgeClass(task['Priority'])}"></span>
-                        </div>
-                        ${task['Deadline'] ? `<div class="task-meta-item"><i class="fas fa-calendar-alt"></i><span>${task['Deadline']}</span></div>` : ''}
-                        ${attachmentButtonHtml ? `<div class="task-meta-item">${attachmentButtonHtml}</div>` : ''}
-                        ${task.isPinned && task.pinnedBy ? `<div class="task-meta-item"><i class="fas fa-user-tag"></i><span>Disematkan oleh ${task.pinnedBy}</span></div>` : ''}
+                        ${task['Deadline'] ? `<div class="task-meta-item"><i class="fas fa-calendar-alt"></i><span>${formattedDeadline}</span></div>` : ''}
+                        ${pinnedByHtml}
                     </div>
+                </div>
+                <div class="task-actions">
+                    <button class="task-btn pin-button" data-task-id="${task['Task ID']}">
+                        <i class="${isTaskPinned ? 'fas' : 'far'} fa-thumbtack"></i>
+                    </button>
+                    <button class="task-btn edit-button" data-task-id="${task['Task ID']}"><i class="fas fa-edit"></i></button>
+                    <button class="task-btn archive-button" data-task-id="${task['Task ID']}"><i class="fas fa-box-archive"></i></button>
                 </div>
             </div>
             <div class="task-details">
                 <div class="task-details-content">
-                    <p class="task-details-text"><strong>Proyek:</strong> ${task['Project Name'] || '-'}</p>
+                    <p class="task-details-text"><strong>Aktivitas:</strong> ${task['Activity / Task'] || '-'}</p>
                     <p class="task-details-text"><strong>Platform:</strong> ${formatMultiSelectDisplay(task['Platform'])}</p>
                     <p class="task-details-text"><strong>Approval:</strong> <span class="status-badge ${getStatusBadgeClass(task['Approval Status'])}">${task['Approval Status'] || '-'}</span></p>
                     <p class="task-details-text"><strong>PIC:</strong> ${formatMultiSelectDisplay(task['PIC / Team'])}</p>
-                    ${task['Notes'] ? `<p class="task-details-text"><strong>Catatan:</strong> ${task['Notes']}</p>` : ''}
+                    ${detailsContent}
                 </div>
             </div>
         `;
         
-        // Event listener untuk expand/collapse detail
         taskItem.querySelector('.task-header').addEventListener('click', (e) => {
-            // Jangan expand/collapse jika mengklik tombol di dalam header
-            if (e.target.closest('.task-actions') || e.target.closest('.task-btn')) {
+            if (e.target.closest('.task-actions')) {
                 return;
             }
             taskItem.classList.toggle('expanded');
@@ -352,7 +386,7 @@ function renderTasks() {
         if (viewButton) {
             viewButton.addEventListener('click', (e) => {
                 e.stopPropagation();
-                const link = e.target.dataset.link || e.target.parentElement.dataset.link;
+                const link = e.target.dataset.link || e.target.closest('button').dataset.link;
                 if (link) {
                     imagePopupImage.src = link;
                     imagePopupModal.classList.add('active');
@@ -492,11 +526,9 @@ async function archiveTask(taskId) {
             fetchTasks();
         } else {
             showCustomAlert('Gagal mengarsipkan tugas: ' + result.message);
-            console.error('API Error:', result.message);
         }
     } catch (error) {
         showCustomAlert('Terjadi kesalahan saat mengarsipkan tugas. Silakan coba lagi. Detail: ' + error.message);
-        console.error('Archive error:', error);
     } finally {
         hideLoading();
     }
@@ -521,11 +553,9 @@ async function restoreTask(taskId) {
             closeArchiveListModal();
         } else {
             showCustomAlert('Gagal mengembalikan tugas: ' + result.message);
-            console.error('API Error:', result.message);
         }
     } catch (error) {
         showCustomAlert('Terjadi kesalahan saat mengembalikan tugas. Silakan coba lagi. Detail: ' + error.message);
-        console.error('Restore error:', error);
     } finally {
         hideLoading();
     }
@@ -564,7 +594,6 @@ async function openArchiveListModal() {
         archiveListModal.classList.add('active');
     } catch (error) {
         showCustomAlert('Gagal memuat daftar arsip. Silakan coba lagi. Detail: ' + error.message);
-        console.error('Archive list error:', error);
     } finally {
         hideLoading();
     }
@@ -575,7 +604,7 @@ function closeArchiveListModal() {
 }
 
 async function generateDailyReportPdf() {
-    settingsPanel.classList.remove('active'); // Close settings panel
+    settingsPanel.classList.remove('active');
     showLoading();
     try {
         const { jsPDF } = window.jspdf;
@@ -605,9 +634,9 @@ async function generateDailyReportPdf() {
             doc.text('Tidak ada tugas aktif untuk dilaporkan hari ini.', 10, y + 10);
         } else {
             const columnHeaders = [
-                'Proyek', 'Aktivitas', 'Platform', 'Work Status', 'Approval Status', 'PIC / Tim', 'Batas Waktu', 'Prioritas', 'Lampiran'
+                'Prioritas', 'Status', 'Batas Waktu', 'Proyek', 'Aktivitas', 'Platform', 'Approval', 'PIC / Tim', 'Lampiran'
             ];
-            const finalColumnWidths = [40, 55, 30, 30, 30, 20, 20, 15, 20];
+            const finalColumnWidths = [15, 30, 20, 40, 40, 30, 30, 20, 20];
 
             doc.setFont('helvetica', 'bold');
             let currentX = 10;
@@ -636,7 +665,6 @@ async function generateDailyReportPdf() {
                         img.crossOrigin = 'anonymous';
                         img.onload = () => resolve(img);
                         img.onerror = () => {
-                            console.error(`Gagal memuat gambar dari URL: ${attachmentLink}`);
                             resolve(null);
                         };
                         img.src = attachmentLink;
@@ -668,14 +696,14 @@ async function generateDailyReportPdf() {
                 }
 
                 const rowData = [
+                    task['Priority'] || '-',
+                    taskStatusDisplay,
+                    formattedDeadline,
                     task['Project Name'] || '-',
                     task['Activity / Task'] || '-',
                     task['Platform'] || '-',
-                    taskStatusDisplay,
                     task['Approval Status'] || '-',
-                    task['PIC / Team'] || '-',
-                    formattedDeadline,
-                    task['Priority'] || '-'
+                    task['PIC / Team'] || '-'
                 ];
 
                 let imageHeight = 0;
@@ -744,7 +772,6 @@ async function generateDailyReportPdf() {
 
     } catch (error) {
         showCustomAlert('Gagal membuat laporan PDF. Silakan coba lagi. Detail: ' + error.message);
-        console.error('PDF generation error:', error);
     } finally {
         hideLoading();
     }
@@ -795,28 +822,43 @@ async function updateUserData(username, pin, firstLoginDone = null) {
         }
     } catch (error) {
         showCustomAlert('Terjadi kesalahan saat memperbarui PIN. Silakan coba lagi. Detail: ' + error.message);
-        console.error('Error updating user data:', error);
         return false;
     } finally {
         hideLoading();
     }
 }
 
-function togglePinTask(taskId) {
-    console.log(`Attempting to toggle pin for task ID: ${taskId}`);
+async function togglePinTask(taskId) {
     const taskIndex = allTasks.findIndex(t => t['Task ID'] === taskId);
     if (taskIndex > -1) {
         const currentTask = allTasks[taskIndex];
         const isPinned = !currentTask.isPinned;
-        currentTask.isPinned = isPinned;
-        currentTask.pinnedBy = isPinned ? currentLoggedInUser : null;
         
-        // Logika backend untuk update pin task
-        console.log(`Task ${taskId} is now ${isPinned ? 'pinned' : 'unpinned'} by ${currentTask.pinnedBy}.`);
-        console.warn('Backend update is required for this feature to be persistent across sessions.');
-
-        // Update local data and re-render
-        renderTasks();
+        showLoading();
+        try {
+            const response = await fetch(DATA_HANDLER_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'pin', taskId: taskId, isPinned: isPinned, pinnedBy: isPinned ? currentLoggedInUser : null })
+            });
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`HTTP error! status: ${response.status}. Response: ${errorText}`);
+            }
+            const result = await response.json();
+            if (result.status === 'success') {
+                showCustomAlert('Status pin tugas berhasil diperbarui!');
+                currentTask.isPinned = isPinned;
+                currentTask.pinnedBy = isPinned ? currentLoggedInUser : null;
+                renderTasks();
+            } else {
+                showCustomAlert('Gagal memperbarui status pin: ' + result.message);
+            }
+        } catch (error) {
+            showCustomAlert('Terjadi kesalahan saat memperbarui status pin. Silakan coba lagi. Detail: ' + error.message);
+        } finally {
+            hideLoading();
+        }
     }
 }
 
@@ -889,15 +931,19 @@ saveDashboardPinButton.addEventListener('click', async () => {
     }
 });
 
-// NEW: Event listeners untuk tema
-themeLightButton.addEventListener('click', () => setTheme('light-mode'));
-themeDarkButton.addEventListener('click', () => setTheme('dark-mode'));
+themeOptionsButtons.forEach(button => {
+    button.addEventListener('click', (e) => {
+        const theme = e.target.dataset.theme;
+        if (theme) {
+            setTheme(theme);
+        }
+    });
+});
 
-// NEW: Event listeners untuk filter dan sort
 filterAllButton.addEventListener('click', () => {
     currentFilter = 'all';
-    searchInput.value = ''; // Reset search input
-    currentSearch = ''; // Reset search term
+    searchInput.value = '';
+    currentSearch = '';
     document.querySelectorAll('.filter-controls button').forEach(btn => btn.classList.remove('active'));
     filterAllButton.classList.add('active');
     renderTasks();
@@ -905,8 +951,8 @@ filterAllButton.addEventListener('click', () => {
 
 filterMyButton.addEventListener('click', () => {
     currentFilter = 'my';
-    searchInput.value = ''; // Reset search input
-    currentSearch = ''; // Reset search term
+    searchInput.value = '';
+    currentSearch = '';
     document.querySelectorAll('.filter-controls button').forEach(btn => btn.classList.remove('active'));
     filterMyButton.classList.add('active');
     renderTasks();
@@ -918,7 +964,6 @@ sortSelect.addEventListener('change', (e) => {
     renderTasks();
 });
 
-// NEW: Event listeners untuk search
 searchButton.addEventListener('click', () => {
     searchBar.style.display = searchBar.style.display === 'block' ? 'none' : 'block';
     searchInput.focus();
@@ -928,7 +973,6 @@ searchInput.addEventListener('input', (e) => {
     renderTasks();
 });
 
-// NEW: Event listeners untuk settings panel
 hamburgerMenu.addEventListener('click', () => {
     settingsPanel.classList.add('active');
 });
@@ -937,7 +981,7 @@ closeSettingsButton.addEventListener('click', () => {
 });
 settingsPanel.addEventListener('click', (e) => {
     if (e.target === settingsPanel) {
-        settingsPanel.classList.remove('active');
+        closeSettingsButton.click();
     }
 });
 
@@ -1077,7 +1121,9 @@ taskForm.addEventListener('submit', async (e) => {
             'PIC / Team': picTeamValue,
             'Deadline': deadlineInput.value,
             'Priority': prioritySelect.value,
-            'Attachment Link': finalAttachmentUrl
+            'Attachment Link': finalAttachmentUrl,
+            isPinned: false, 
+            pinnedBy: null
         };
         
         if (workStatusSelect.value === 'Final Touch') {
@@ -1098,14 +1144,12 @@ taskForm.addEventListener('submit', async (e) => {
             body: JSON.stringify({ action: action, task: taskData })
         });
         
-        const responseText = await response.text();
-        console.log('Raw server response:', responseText);
-
         if (!response.ok) {
+            const responseText = await response.text();
             throw new Error(`HTTP error! status: ${response.status}. Response: ${responseText}`);
         }
 
-        const result = JSON.parse(responseText);
+        const result = await response.json();
 
         if (result.status === 'success') {
             showCustomAlert('Tugas berhasil ' + (isEditing ? 'diperbarui' : 'ditambahkan') + '!');
@@ -1113,11 +1157,9 @@ taskForm.addEventListener('submit', async (e) => {
             fetchTasks(); 
         } else {
             showCustomAlert('Gagal ' + (isEditing ? 'memperbarui' : 'menambahkan') + ' tugas: ' + result.message);
-            console.error('API Error:', result.message);
         }
     } catch (error) {
         showCustomAlert('Terjadi kesalahan saat menyimpan tugas. Silakan coba lagi. Detail: ' + error.message);
-        console.error('Submit error:', error);
     } finally {
         hideLoading();
     }
