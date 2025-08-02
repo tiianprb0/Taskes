@@ -3,6 +3,10 @@
  * Description: Skrip Google Apps untuk berinteraksi dengan Google Spreadsheet.
  * Menyediakan endpoint API untuk membaca, menambah, memperbarui, mengarsipkan,
  * mengembalikan, dan mendapatkan data arsip.
+ *
+ * Catatan: Spreadsheet hanya dapat menyimpan string teks, sehingga gambar
+ * yang diunggah akan disimpan sebagai string Base64 yang panjang atau URL.
+ * Spreadsheet tidak akan menampilkan pratinjau gambar.
  */
 
 // Nama sheet tempat data tugas berada
@@ -123,7 +127,7 @@ function doPost(e) {
       return restoreTask(activeSheet, archiveSheet, archiveHeaders, taskIdToRestore, output);
     } else if (action === 'getArchivedTasks') {
       return getArchivedTasks(output);
-    } else if (action === 'getAllTasks') { // NEW: Action to get all tasks
+    } else if (action === 'getAllTasks') {
         return doGet(e);
     } else {
       throw new Error("Aksi tidak dikenal: " + action);
@@ -142,15 +146,14 @@ function doPost(e) {
  */
 function addTask(sheet, headers, taskData, output) {
   const newRow = [];
-  const taskId = Utilities.getUuid(); // Membuat ID unik
-  const currentDate = new Date(); // Tanggal saat ini
+  const taskId = Utilities.getUuid();
+  const currentDate = new Date();
 
-  // Mengisi data sesuai urutan header
   headers.forEach(header => {
     if (header === 'Task ID') {
       newRow.push(taskId);
     } else if (header === 'Date') {
-      newRow.push(currentDate.toLocaleDateString('en-US')); // Format tanggal, bisa disesuaikan
+      newRow.push(currentDate.toLocaleDateString('en-US'));
     } else if (header === 'Project Name') {
       if (taskData.hasOwnProperty('Project Name') && taskData['Project Name'].trim() !== '') {
         newRow.push(taskData['Project Name']);
@@ -182,10 +185,9 @@ function updateTask(sheet, headers, taskData, output) {
   const values = sheet.getDataRange().getValues();
   let rowIndexToUpdate = -1;
 
-  // Cari baris berdasarkan Task ID
   for (let i = 1; i < values.length; i++) {
     if (values[i][headers.indexOf('Task ID')] === taskIdToUpdate) {
-      rowIndexToUpdate = i + 1; // +1 karena getRange menggunakan indeks 1-based
+      rowIndexToUpdate = i + 1;
       break;
     }
   }
@@ -194,7 +196,6 @@ function updateTask(sheet, headers, taskData, output) {
     throw new Error(`Tugas dengan Task ID '${taskIdToUpdate}' tidak ditemukan.`);
   }
 
-  // Perbarui nilai di baris yang ditemukan
   headers.forEach((header, colIndex) => {
     if (taskData.hasOwnProperty(header) && header !== 'Task ID' && header !== 'Date') {
       sheet.getRange(rowIndexToUpdate, colIndex + 1).setValue(taskData[header]);
@@ -212,10 +213,8 @@ function archiveTask(sheet, headers, taskIdToArchive, output) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   let archiveSheet = ss.getSheetByName(ARCHIVE_SHEET_NAME);
 
-  // Buat sheet arsip jika belum ada
   if (!archiveSheet) {
     archiveSheet = ss.insertSheet(ARCHIVE_SHEET_NAME);
-    // Salin header dari sheet utama ke sheet arsip
     const mainSheetHeaders = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues();
     archiveSheet.getRange(1, 1, 1, mainSheetHeaders[0].length).setValues(mainSheetHeaders);
   }
@@ -225,10 +224,9 @@ function archiveTask(sheet, headers, taskIdToArchive, output) {
   let rowToArchive = [];
   const taskIdIndex = headers.indexOf('Task ID');
 
-  // Cari baris berdasarkan Task ID
   for (let i = 1; i < values.length; i++) {
     if (values[i][taskIdIndex] === taskIdToArchive) {
-      rowIndexToDelete = i + 1; // +1 karena getRange menggunakan indeks 1-based
+      rowIndexToDelete = i + 1;
       rowToArchive = values[i];
       break;
     }
@@ -238,10 +236,7 @@ function archiveTask(sheet, headers, taskIdToArchive, output) {
     throw new Error(`Tugas dengan Task ID '${taskIdToArchive}' tidak ditemukan.`);
   }
 
-  // Tambahkan baris ke sheet arsip
   archiveSheet.appendRow(rowToArchive);
-
-  // Hapus baris dari sheet utama
   sheet.deleteRow(rowIndexToDelete);
 
   output.setContent(JSON.stringify({ status: 'success', message: 'Tugas berhasil diarsipkan.' }));
@@ -257,10 +252,9 @@ function restoreTask(activeSheet, archiveSheet, archiveHeaders, taskIdToRestore,
   let rowToRestore = [];
   const taskIdIndex = archiveHeaders.indexOf('Task ID');
 
-  // Cari baris berdasarkan Task ID di sheet arsip
   for (let i = 1; i < archiveValues.length; i++) {
     if (archiveValues[i][taskIdIndex] === taskIdToRestore) {
-      rowIndexToDelete = i + 1; // +1 karena getRange menggunakan indeks 1-based
+      rowIndexToDelete = i + 1;
       rowToRestore = archiveValues[i];
       break;
     }
@@ -270,10 +264,7 @@ function restoreTask(activeSheet, archiveSheet, archiveHeaders, taskIdToRestore,
     throw new Error(`Tugas dengan Task ID '${taskIdToRestore}' tidak ditemukan di arsip.`);
   }
 
-  // Hapus baris dari sheet arsip
   archiveSheet.deleteRow(rowIndexToDelete);
-  
-  // Tambahkan baris ke sheet aktif
   activeSheet.appendRow(rowToRestore);
 
   output.setContent(JSON.stringify({ status: 'success', message: 'Tugas berhasil dikembalikan.' }));
@@ -343,11 +334,10 @@ function setSpreadsheetHeaders() {
       'PIC / Team',
       'Deadline',
       'Priority',
-      'Attachment Link', // NEW: Pastikan ini ada di header
+      'Attachment Link',
       'Progress (%)'
     ];
 
-    // Mengatur nilai header di baris pertama
     sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
     Logger.log('Header spreadsheet berhasil diatur.');
 
@@ -371,7 +361,6 @@ function syncToLocalJson() {
     const range = sheet.getDataRange();
     const values = range.getValues();
     
-    // Periksa apakah ada data selain header
     if (values.length <= 1) {
       SpreadsheetApp.getUi().alert('Tidak ada data tugas untuk disinkronkan.');
       return;
