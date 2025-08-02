@@ -42,7 +42,6 @@
                             <th>Platform</th>
                             <th>Work Status</th>
                             <th>Approval Status</th>
-                            <th>Catatan</th>
                             <th>PIC / Tim</th>
                             <th>Batas Waktu</th>
                             <th>Prioritas</th>
@@ -138,7 +137,6 @@
                     </select>
                 </div>
 
-                <!-- NEW: Attachment Section for Image Upload or URL -->
                 <div class="form-group">
                     <label>Lampiran:</label>
                     <div class="attachment-options">
@@ -218,6 +216,35 @@
         </div>
     </div>
 
+    <!-- NEW: Generic Custom Alert/Confirm Modal -->
+    <div id="customAlertModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 id="customAlertTitle">Notifikasi</h3>
+            <p id="customAlertMessage"></p>
+            <div class="modal-buttons">
+                <button class="button success-button" id="customAlertOkButton">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="customConfirmModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 id="customConfirmTitle">Konfirmasi</h3>
+            <p id="customConfirmMessage"></p>
+            <div class="modal-buttons">
+                <button class="button danger-button" id="customConfirmCancelButton">Batal</button>
+                <button class="button success-button" id="customConfirmOkButton">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- NEW: Image Popup Modal -->
+    <div id="imagePopupModal" class="modal-overlay">
+        <div class="modal-content-image">
+            <button class="close-button" id="closeImagePopupModalButton">&times;</button>
+            <img id="imagePopupImage" src="#" alt="Lampiran Gambar" class="image-popup">
+        </div>
+    </div>
 
     <!-- Loading Overlay -->
     <div id="loadingOverlay" class="loading-overlay">
