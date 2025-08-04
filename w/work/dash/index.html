@@ -1,283 +1,437 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Taskes - Creative Team Task Tracker</title>
+    <title>Login - Creative Team Task Tracker</title>
     <!-- Memuat font Playfair Display dan Plus Jakarta Sans dari Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Plus+Jakarta+Sans:wght@400;500;700&display=swap" rel="stylesheet">
     <!-- Memuat Font Awesome untuk ikon -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    <!-- Memuat file CSS utama (path relatif) -->
-    <link rel="stylesheet" href="../style.css">
-</head>
-<body data-theme="light-mode">
-    <div class="container">
-        <!-- Dashboard Utama -->
-        <div id="dashboard-main-content">
-            <!-- HEADER: Mengganti header lama -->
-            <div class="header">
-                <div class="user-info">
-                    <div class="user-avatar" id="user-avatar">?</div>
-                    <div id="username-display">User</div>
-                </div>
-                <div class="header-controls">
-                    <!-- Tombol search dan menu hamburger -->
-                    <button class="search-btn" id="search-btn"><i class="fas fa-search"></i></button>
-                    <button class="hamburger-menu" id="hamburger-menu"><i class="fas fa-bars"></i></button>
-                </div>
-            </div>
+    <!-- Memuat file CSS utama untuk variabel global dan styling lain -->
+    <link rel="stylesheet" href="style.css">
     
-            <!-- TITLE BAR: Mengganti title lama dan tab -->
-            <div class="title-bar">
-                <h1>Dashboard</h1>
-                <select id="sort-select" class="sort-select">
-                    <option value="default">Sort By</option>
-                    <option value="deadline">Deadline</option>
-                    <option value="priority">Priority</option>
+    <style>
+        /* CSS Tambahan untuk halaman login agar sesuai dengan referensi neobrutalism */
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .landing-container {
+            text-align: center;
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center; /* Perbaikan: Menambahkan properti ini untuk perataan horizontal */
+            gap: var(--gap);
+        }
+
+        .app-logo {
+            font-size: 4rem;
+            color: var(--theme-primary-color);
+        }
+
+        .landing-title {
+            font-size: var(--font-lg, 2.5rem);
+            font-weight: 700;
+            font-family: 'Playfair Display', serif;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--theme-border-color);
+        }
+
+        .landing-subtitle {
+            font-size: var(--font-sm, 0.875rem);
+            color: var(--theme-text-color);
+            opacity: 0.8;
+            margin-bottom: var(--gap);
+        }
+        
+        .login-box {
+            max-width: 400px;
+            margin: 0;
+            padding: var(--gap);
+            background-color: var(--theme-container-background);
+            border: var(--border-width) solid var(--theme-border-color);
+            border-radius: var(--radius);
+            box-shadow: var(--color-shadow);
+            width: 100%;
+        }
+
+        .login-box h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            color: var(--theme-border-color);
+            margin-bottom: 25px;
+            text-align: center;
+            display: none; /* Menyembunyikan judul lama */
+        }
+        
+        .form-group {
+            text-align: left;
+            margin-bottom: 20px;
+        }
+
+        .form-group:last-of-type {
+            margin-bottom: 0;
+        }
+
+        .login-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-top: 20px;
+        }
+
+        .landing-btn {
+            padding: 0.75rem 1.5rem;
+            border: var(--border-width) solid var(--theme-border-color);
+            border-radius: var(--radius);
+            font-size: var(--font-sm, 0.875rem);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: var(--color-shadow);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            background-color: var(--theme-primary-color);
+            color: var(--color-dark);
+            width: 100%;
+        }
+        
+        .landing-btn.secondary {
+            background-color: var(--color-accent);
+        }
+
+        .landing-btn:hover {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0px rgba(107, 96, 84, 0.4);
+        }
+        
+        .landing-btn:active {
+            transform: translate(4px, 4px);
+            box-shadow: 0px 0px 0px rgba(107, 96, 84, 0.3);
+        }
+
+        .footer {
+            text-align: center;
+            padding: 1rem;
+            font-size: var(--font-xs, 0.75rem);
+            color: var(--dark);
+            margin-top: auto;
+        }
+        
+        @media (max-width: 480px) {
+            .app-logo {
+                font-size: 3rem;
+            }
+            .landing-title {
+                font-size: 1.8em;
+            }
+            .landing-subtitle {
+                font-size: 0.75em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="landing-container">
+        <div class="app-logo"><i class="fas fa-tasks"></i></div>
+        <h1 class="landing-title">Creative Team Task Tracker</h1>
+        <p class="landing-subtitle">Kelola tugas tim kreatifmu dengan mudah dan efisien.</p>
+
+        <div class="login-box">
+            <div class="form-group">
+                <label for="username">Nama Pengguna:</label>
+                <select id="username" class="input-field">
+                    <option value="">Pilih Nama</option>
+                    <option value="Antony">Antony</option>
+                    <option value="Tian">Tian</option>
+                    <option value="Steven">Steven</option>
+                    <option value="Mutia">Mutia</option>
                 </select>
             </div>
-            
-            <!-- SEARCH BAR: Menambah search bar baru -->
-            <div class="search-bar" id="search-bar">
-                <input type="text" id="search-input" class="search-input" placeholder="Search tasks...">
+            <div class="form-group" id="pinInputGroup" style="display: none;">
+                <label for="pin">PIN:</label>
+                <input type="password" id="pin" class="input-field" placeholder="Masukkan PIN Anda" minlength="4" maxlength="4">
             </div>
-            
-            <!-- FILTER CONTROLS: Mengganti tab lama dengan tombol filter -->
-            <div class="filter-controls">
-                <button id="filter-all" class="active">All</button>
-                <button id="filter-my">My Tasks</button>
-                <!-- Tombol "Tambah Tugas Baru" dipindahkan di sini untuk kemudahan akses -->
-                <button id="addTaskButton" class="add-task-btn"><i class="fas fa-plus"></i> Add</button>
+            <div class="login-buttons">
+                <button id="loginButton" class="landing-btn">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </button>
             </div>
-            
-            <!-- TASK LIST: Mengganti tabel dengan daftar tugas -->
-            <ul class="task-list" id="task-list"></ul>
-            
-            <!-- EMPTY STATE: Menambahkan placeholder jika tidak ada tugas -->
-            <div class="empty-state" id="empty-state" style="display: none;">
-                <p>No tasks found</p>
-                <small>Click the Add button to create a new task!</small>
-            </div>
-        </div>
-
-        <!-- Form Tambah/Edit Tugas (tetap sama) -->
-        <div id="taskFormSection" class="task-form-section" style="display: none;">
-            <h3 id="modalTitle" class="form-section-title">Add New Task</h3>
-            <form id="taskForm">
-                <input type="hidden" id="taskId"> <!-- Untuk menyimpan Task ID saat edit -->
-
-                <div class="form-group">
-                    <label for="projectName">Project Name:</label>
-                    <input type="text" id="projectName" class="input-field" placeholder="Auto-generated if empty">
-                </div>
-                <div class="form-group">
-                    <label for="activity">Activity / Task:</label>
-                    <input type="text" id="activity" class="input-field" required>
-                </div>
-                <div class="form-group">
-                    <label for="platform">Platform:</label>
-                    <select id="platform" class="select-field" multiple size="5"> <!-- Multiple selection -->
-                        <option value="All Social Media">All Social Media</option>
-                        <option value="Media Cetak">Media Cetak</option>
-                        <option value="IG Reels">IG Reels</option>
-                        <option value="TikTok">TikTok</option>
-                        <option value="YouTube Short">YouTube Short</option>
-                        <option value="TV Display">TV Display</option>
-                        <option value="Other">Other</option>
-                    </select>
-                </div>
-                <div class="form-group" id="otherPlatformGroup" style="display: none;">
-                    <label for="otherPlatformInput">Other Platform (Optional):</label>
-                    <input type="text" id="otherPlatformInput" class="input-field" placeholder="e.g., Website Banner, Billboard">
-                </div>
-
-                <div class="form-group">
-                    <label for="workStatus">Work Status:</label>
-                    <select id="workStatus" class="select-field">
-                        <option value="Editing">Editing</option>
-                        <option value="Take Konten">Take Konten</option>
-                        <option value="Final Touch">Final Touch</option>
-                        <option value="On Hold">On Hold</option>
-                        <option value="Done">Done</option>
-                    </select>
-                </div>
-                <div class="form-group" id="finalTouchProgressGroup" style="display: none;">
-                    <label for="finalTouchProgress">Final Touch Percentage: <span id="finalTouchProgressValue">0</span>%</label>
-                    <input type="range" id="finalTouchProgress" class="slider-field" min="0" max="100" value="0">
-                </div>
-
-                <div class="form-group">
-                    <label for="approvalStatus">Approval Status:</label>
-                    <select id="approvalStatus" class="select-field">
-                        <option value="Approved">Approved</option>
-                        <option value="To Be Announced (TBA)">To Be Announced (TBA)</option>
-                        <option value="Revised">Revised</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="notes">Notes:</label>
-                    <textarea id="notes" class="textarea-field"></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="picTeam">PIC / Team:</label>
-                    <select id="picTeam" class="select-field" multiple size="4" required> <!-- Multiple selection -->
-                        <option value="Antony">Antony</option>
-                        <option value="Tian">Tian</option>
-                        <option value="Steven">Steven</option>
-                        <option value="Mutia">Mutia</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="deadline">Deadline:</label>
-                    <input type="date" id="deadline" class="input-field">
-                </div>
-                <div class="form-group">
-                    <label for="priority">Priority:</label>
-                    <select id="priority" class="select-field">
-                        <option value="Low">Low</option>
-                        <option value="Medium">Medium</option>
-                        <option value="High">High</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label>Attachment:</label>
-                    <div class="attachment-options">
-                        <label class="radio-label">
-                            <input type="radio" name="attachment-type" value="upload" checked>
-                            Upload File
-                        </label>
-                        <label class="radio-label">
-                            <input type="radio" name="attachment-type" value="url">
-                            Use URL
-                        </label>
-                    </div>
-
-                    <div id="attachment-upload-group">
-                        <input type="file" id="attachmentFile" class="input-field" accept="image/*">
-                    </div>
-
-                    <div id="attachment-url-group" style="display: none;">
-                        <input type="url" id="attachmentLink" class="input-field" placeholder="URL or Google Drive link">
-                    </div>
-
-                    <div id="image-preview-container" class="image-preview-container" style="display: none;">
-                        <img id="image-preview" src="#" alt="Image Preview" class="image-preview">
-                        <button type="button" id="remove-image-button" class="remove-image-button">&times;</button>
-                    </div>
-                </div>
-
-                <div class="modal-buttons">
-                    <button type="submit" class="button success-button">Save Task</button>
-                    <button type="button" class="button secondary-button" id="cancelTaskButton">Cancel</button>
-                </div>
-            </form>
+            <p id="errorMessage" class="error-message"></p>
         </div>
     </div>
 
-    <!-- SETTINGS PANEL: Menggantikan footer lama -->
-    <div class="settings-panel" id="settings-panel">
-        <div class="settings-header">
-            <div class="settings-title">Settings</div>
-            <button class="close-settings" id="close-settings"><i class="fas fa-times"></i></button>
-        </div>
-
-        <div class="settings-group">
-            <label class="settings-label">Theme</label>
-            <div class="theme-options">
-                <button class="theme-option theme-light" id="theme-light" data-theme="light-mode"></button>
-                <button class="theme-option theme-dark" id="theme-dark" data-theme="dark-mode"></button>
-                <button class="theme-option theme-pink" id="theme-pink" data-theme="pink-mode"></button>
-                <button class="theme-option theme-blue" id="theme-blue" data-theme="blue-mode"></button>
-                <button class="theme-option theme-green" id="theme-green" data-theme="green-mode"></button>
-            </div>
-        </div>
-        
-        <div class="settings-group">
-            <label class="settings-label">Account</label>
-            <button class="settings-btn" id="setPinDashboardText"><i class="fas fa-key"></i> Set/Change PIN</button>
-            <button class="settings-btn" id="logoutButton"><i class="fas fa-sign-out-alt"></i> Logout</button>
-        </div>
-        
-        <div class="settings-group">
-            <label class="settings-label">Task Management</label>
-            <button class="settings-btn" id="archiveTasksText"><i class="fas fa-box-archive"></i> View Archived Tasks</button>
-            <button class="settings-btn" id="generateReportButton"><i class="fas fa-file-pdf"></i> Generate Daily Report</button>
-        </div>
-    </div>
-
-
-    <!-- Semua modal (Set PIN, Arsip, Alert, Confirm, Image Popup) dipindahkan ke sini -->
-    <!-- Modal Set/Change PIN dari Dashboard -->
-    <div id="setPinDashboardModal" class="modal-overlay">
+    <!-- Modal untuk Set PIN Pertama Kali -->
+    <div id="setPinModal" class="modal-overlay">
         <div class="modal-content">
-            <button class="close-button" id="closePinDashboardModalButton">&times;</button>
-            <h3>Set / Change PIN</h3>
-            <p>Leave the PIN blank to remove it.</p>
+            <h3 class="form-section-title">Atur PIN Anda</h3>
+            <p>Ini adalah login pertama Anda. Anda dapat mengatur PIN untuk keamanan tambahan.</p>
             <div class="form-group">
-                <label for="dashboardNewPin">New PIN (4 digits, optional):</label>
-                <input type="password" id="dashboardNewPin" class="input-field" minlength="4" maxlength="4">
+                <label for="newPin">PIN Baru (4 digit):</label>
+                <input type="password" id="newPin" class="input-field" minlength="4" maxlength="4">
             </div>
             <div class="modal-buttons">
-                <button id="saveDashboardPinButton" class="button success-button">Save PIN</button>
-                <button id="cancelDashboardPinButton" class="button secondary-button">Cancel</button>
+                <button id="savePinButton" class="button success-button">Simpan PIN</button>
+                <button id="skipPinButton" class="button secondary-button">Lewati</button>
             </div>
-            <p id="dashboardPinErrorMessage" class="error-message"></p>
+            <p id="pinErrorMessage" class="error-message"></p>
         </div>
     </div>
+    
+    <footer class="footer">
+        <p>Created with <span class="heart"><i class="fas fa-heart"></i></span> by Tian.</p>
+    </footer>
 
-    <!-- Modal Arsip Tugas (Popup) -->
-    <div id="archiveListModal" class="modal-overlay">
-        <div class="modal-content">
-            <button class="close-button" id="closeArchiveListModalButton">&times;</button>
-            <h3>Archived Tasks</h3>
-            <div id="archivedProjectsList">
-                <!-- Data arsip akan dimuat di sini oleh JavaScript -->
-                <p style="text-align: center; color: var(--color-text-secondary);">Loading archived tasks...</p>
-            </div>
-        </div>
-    </div>
+    <script>
+        // File JavaScript untuk logika login
+        const pinManagerUrl = 'pin_manager.php'; // Path ke file pin_manager.php
+        const SESSION_KEY = 'loggedInUser';
+        const SESSION_DURATION_MS = 12 * 60 * 60 * 1000; // 12 jam dalam milidetik
 
-    <!-- NEW: Generic Custom Alert/Confirm Modal -->
-    <div id="customAlertModal" class="modal-overlay">
-        <div class="modal-content">
-            <h3 id="customAlertTitle">Notification</h3>
-            <p id="customAlertMessage"></p>
-            <div class="modal-buttons">
-                <button class="button success-button" id="customAlertOkButton">OK</button>
-            </div>
-        </div>
-    </div>
+        const loginButton = document.getElementById('loginButton');
+        const usernameSelect = document.getElementById('username');
+        const pinInputGroup = document.getElementById('pinInputGroup');
+        const pinInput = document.getElementById('pin');
+        const errorMessage = document.getElementById('errorMessage');
+        const setPinModal = document.getElementById('setPinModal');
+        const newPinInput = document.getElementById('newPin');
+        const savePinButton = document.getElementById('savePinButton');
+        const skipPinButton = document.getElementById('skipPinButton');
+        const pinErrorMessage = document.getElementById('pinErrorMessage');
 
-    <div id="customConfirmModal" class="modal-overlay">
-        <div class="modal-content">
-            <h3 id="customConfirmTitle">Confirmation</h3>
-            <p id="customConfirmMessage"></p>
-            <div class="modal-buttons">
-                <button class="button danger-button" id="customConfirmCancelButton">Cancel</button>
-                <button class="button success-button" id="customConfirmOkButton">OK</button>
-            </div>
-        </div>
-    </div>
+        let allUsersData = []; // Akan menyimpan data pengguna dari pin_manager.php
 
-    <!-- NEW: Image Popup Modal -->
-    <div id="imagePopupModal" class="modal-overlay">
-        <div class="modal-content-image">
-            <button class="close-button" id="closeImagePopupModalButton">&times;</button>
-            <img id="imagePopupImage" src="#" alt="Image Attachment" class="image-popup">
-        </div>
-    </div>
+        /**
+         * Fungsi untuk memuat data pengguna dari pin_manager.php.
+         * Digunakan untuk mengecek status PIN dan login pertama.
+         */
+        async function loadUsers() {
+            try {
+                const response = await fetch(pinManagerUrl);
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`HTTP error! status: ${response.status}. Response: ${errorText}`);
+                }
+                const result = await response.json();
+                if (result.status === 'success') {
+                    allUsersData = result.data;
+                    return result.data;
+                } else {
+                    throw new Error(result.message || 'Gagal memuat data pengguna.');
+                }
+            } catch (error) {
+                console.error('Error loading users:', error);
+                errorMessage.textContent = 'Gagal memuat data pengguna. Silakan coba lagi. Detail: ' + error.message;
+                return [];
+            }
+        }
 
-    <!-- Loading Overlay -->
-    <div id="loadingOverlay" class="loading-overlay">
-        Loading data...
-    </div>
+        /**
+         * Fungsi untuk memperbarui data pengguna via pin_manager.php
+         * Digunakan untuk menyimpan PIN baru atau menandai login pertama selesai.
+         */
+        async function updateUserData(username, pin, firstLoginDone) {
+            try {
+                const response = await fetch(pinManagerUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        action: 'updatePin',
+                        username: username,
+                        pin: pin,
+                        firstLoginDone: firstLoginDone
+                    })
+                });
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`HTTP error! status: ${response.status}. Response: ${errorText}`);
+                }
+                const result = await response.json();
+                if (result.status === 'success') {
+                    return true;
+                } else {
+                    throw new Error(result.message || 'Gagal memperbarui data pengguna.');
+                }
+            } catch (error) {
+                console.error('Error updating user data:', error);
+                return false;
+            }
+        }
 
-    <!-- Memuat file JavaScript untuk logika dashboard -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="script.js"></script>
+        /**
+         * Event listener untuk perubahan pilihan username.
+         * Menampilkan atau menyembunyikan input PIN berdasarkan data pengguna.
+         */
+        usernameSelect.addEventListener('change', async () => {
+            const selectedUsername = usernameSelect.value;
+            pinInput.value = ''; // Bersihkan input PIN
+            errorMessage.textContent = ''; // Bersihkan pesan error
+
+            if (selectedUsername) {
+                // Pastikan data user sudah dimuat sebelum mengecek PIN
+                if (allUsersData.length === 0) {
+                    await loadUsers();
+                }
+                const user = allUsersData.find(u => u.name === selectedUsername);
+                if (user && user.pin) {
+                    pinInputGroup.style.display = 'block'; // Tampilkan input PIN jika user punya PIN
+                    pinInput.setAttribute('required', 'true');
+                } else {
+                    pinInputGroup.style.display = 'none'; // Sembunyikan jika tidak punya PIN
+                    pinInput.removeAttribute('required');
+                }
+            } else {
+                pinInputGroup.style.display = 'none';
+                pinInput.removeAttribute('required');
+            }
+        });
+
+        /**
+         * Fungsi untuk menangani proses login saat tombol diklik.
+         */
+        loginButton.addEventListener('click', async () => {
+            const username = usernameSelect.value;
+            const pin = pinInput.value;
+            errorMessage.textContent = ''; // Hapus pesan error sebelumnya
+
+            if (!username) {
+                errorMessage.textContent = 'Nama pengguna harus diisi.';
+                return;
+            }
+
+            await loadUsers(); // Pastikan data users terbaru
+            const foundUser = allUsersData.find(user => user.name === username);
+
+            if (!foundUser) {
+                errorMessage.textContent = 'Nama pengguna tidak valid.';
+                return;
+            }
+
+            if (foundUser.pin && foundUser.pin !== pin) {
+                errorMessage.textContent = 'PIN salah.';
+                return;
+            }
+
+            if (!foundUser.pin && pin) { // Jika user tidak punya PIN tapi input PIN diisi
+                 errorMessage.textContent = 'Pengguna ini tidak memiliki PIN. Kosongkan kolom PIN atau atur PIN Anda.';
+                 return;
+            }
+
+            // Login berhasil
+            // Cek apakah ini login pertama kali dan perlu set PIN
+            if (!foundUser.firstLoginDone) {
+                setPinModal.classList.add('active');
+                localStorage.setItem('tempUserForPinSetup', username); // Simpan sementara username
+            } else {
+                // Langsung masuk dashboard
+                finalizeLogin(username);
+            }
+        });
+
+        /**
+         * Event listener untuk menyimpan PIN baru dari modal.
+         */
+        savePinButton.addEventListener('click', async () => {
+            const username = localStorage.getItem('tempUserForPinSetup');
+            const newPin = newPinInput.value;
+            pinErrorMessage.textContent = '';
+
+            if (!newPin || newPin.length !== 4 || !/^\d+$/.test(newPin)) {
+                pinErrorMessage.textContent = 'PIN harus 4 digit angka.';
+                return;
+            }
+
+            const success = await updateUserData(username, newPin, true);
+            if (success) {
+                setPinModal.classList.remove('active');
+                localStorage.removeItem('tempUserForPinSetup');
+                finalizeLogin(username);
+            } else {
+                pinErrorMessage.textContent = 'Gagal menyimpan PIN. Coba lagi.';
+            }
+        });
+
+        /**
+         * Event listener untuk melewati pengaturan PIN dari modal.
+         */
+        skipPinButton.addEventListener('click', async () => {
+            const username = localStorage.getItem('tempUserForPinSetup');
+            const success = await updateUserData(username, null, true); // PIN tetap null, tapi firstLoginDone jadi true
+            if (success) {
+                setPinModal.classList.remove('active');
+                localStorage.removeItem('tempUserForPinSetup');
+                finalizeLogin(username);
+            } else {
+                pinErrorMessage.textContent = 'Gagal melewati pengaturan PIN. Coba lagi.';
+            }
+        });
+
+        /**
+         * Fungsi untuk menyelesaikan proses login dan redirect ke dashboard.
+         */
+        function finalizeLogin(username) {
+            const sessionData = {
+                username: username,
+                loginTime: new Date().getTime()
+            };
+            localStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
+
+            // Redirect ke halaman dashboard
+            window.location.href = 'dash/index.html';
+        }
+
+        /**
+         * Memuat data pengguna saat DOMContentLoaded untuk mempersiapkan halaman.
+         */
+        document.addEventListener('DOMContentLoaded', async () => {
+             // Cek jika sudah login, langsung redirect ke dashboard (untuk mencegah user kembali ke login page)
+            const storedSession = localStorage.getItem(SESSION_KEY);
+            if (storedSession) {
+                const sessionData = JSON.parse(storedSession);
+                const currentTime = new Date().getTime();
+
+                if (currentTime - sessionData.loginTime < SESSION_DURATION_MS) {
+                    // Sesi masih aktif, perbarui waktu login untuk memperpanjang sesi
+                    sessionData.loginTime = currentTime;
+                    localStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
+                    window.location.href = 'dash/index.html';
+                } else {
+                    // Sesi kadaluarsa, hapus sesi
+                    localStorage.removeItem(SESSION_KEY);
+                }
+            }
+            // Muat data user awal untuk menampilkan atau menyembunyikan input PIN
+            await loadUsers();
+            usernameSelect.dispatchEvent(new Event('change')); // Trigger change event untuk update tampilan PIN input
+        });
+
+        // Mengizinkan login dengan menekan Enter pada input PIN
+        pinInput.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                loginButton.click();
+            }
+        });
+        newPinInput.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                savePinButton.click();
+            }
+        });
+    </script>
 </body>
 </html>
