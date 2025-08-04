@@ -208,7 +208,8 @@ function renderTasks() {
     
     taskList.innerHTML = '';
     
-    let tasksToDisplay = allTasks.filter(task => task['Work Status'] !== 'Archived');
+    // Filter tugas yang hanya berasal dari dashboard
+    let tasksToDisplay = allTasks.filter(task => task['Work Status'] !== 'Archived' && task.source === 'dashboard');
 
     // Menerapkan filter
     if (currentFilter === 'my') {
@@ -656,19 +657,16 @@ async function generateDailyReportPdf() {
         if (activeTasks.length === 0) {
             doc.text('No active tasks to report today.', 10, y + 10);
         } else {
-            // PERBAIKAN: Ubah urutan kolom sesuai permintaan dan hapus "Priority"
             const columnHeaders = [
                 'Project', 'Activity', 'Platform', 'Status', 'Deadline', 'PIC / Team', 'Approval', 'Attachment'
             ];
-            // PERBAIKAN: Sesuaikan lebar kolom dengan urutan baru
             const finalColumnWidths = [40, 40, 30, 30, 20, 30, 30, 20];
 
             doc.setFont('helvetica', 'bold');
             let currentX = 10;
             y += 10;
             columnHeaders.forEach((headerText, i) => {
-                const headerLines = doc.splitTextToSize(headerText, finalColumnWidths[i] - 2);
-                doc.text(headerLines, currentX, y);
+                doc.text(headerText, currentX, y);
                 currentX += finalColumnWidths[i];
             });
             const maxHeaderHeight = columnHeaders.reduce((max, headerText, i) => {
@@ -679,32 +677,9 @@ async function generateDailyReportPdf() {
             y += maxHeaderHeight + 3;
             doc.line(10, y, doc.internal.pageSize.width - 10, y);
             y += 7;
-
             doc.setFont('helvetica', 'normal');
 
-            const imgPromises = activeTasks.map(task => {
-                const attachmentLink = task['Attachment Link'];
-                if (attachmentLink && attachmentLink.match(/\.(jpeg|jpg|gif|png|webp)$/i)) {
-                    return new Promise((resolve) => {
-                        const img = new Image();
-                        img.crossOrigin = 'anonymous';
-                        img.onload = () => resolve(img);
-                        img.onerror = () => {
-                            resolve(null);
-                        };
-                        img.src = attachmentLink;
-                    });
-                }
-                return Promise.resolve(null);
-            });
-
-            const loadedImages = await Promise.all(imgPromises);
-
-            for (let i = 0; i < activeTasks.length; i++) {
-                const task = activeTasks[i];
-                const attachmentLink = task['Attachment Link'] || '';
-                const img = loadedImages[i];
-
+            allTasks.forEach(task => {
                 let currentX = 10;
                 const taskStatusDisplay = task['Work Status'] +
                                           (task['Work Status'] === 'Final Touch' && task['Progress (%)']
@@ -720,7 +695,6 @@ async function generateDailyReportPdf() {
                     }
                 }
 
-                // PERBAIKAN: Ubah urutan data baris dan hapus "Priority"
                 const rowData = [
                     task['Project Name'] || '-',
                     task['Activity / Task'] || '-',
@@ -737,11 +711,16 @@ async function generateDailyReportPdf() {
                 const textHeight = (doc.getLineHeight() / doc.internal.scaleFactor) * 2;
                 let rowContentHeight = textHeight;
 
-                if (img) {
+                const attachmentLink = task['Attachment Link'] || '';
+                
+                const img = new Image();
+                if (attachmentLink.match(/\.(jpeg|jpg|gif|png|webp)$/i)) {
+                    img.src = attachmentLink;
                     imageWidth = 20;
                     imageHeight = img.height * (imageWidth / img.width);
                     rowContentHeight = Math.max(rowContentHeight, imageHeight);
                 }
+
 
                 const rowHeight = rowContentHeight + rowPadding * 2;
 
@@ -761,7 +740,7 @@ async function generateDailyReportPdf() {
                 }
 
                 currentX = 10;
-                const textColumns = finalColumnWidths.slice(0, -1); // Ambil semua lebar kecuali kolom Attachment
+                const textColumns = finalColumnWidths.slice(0, -1);
                 const linesPerCell = rowData.map((cellText, i) => doc.splitTextToSize(cellText, textColumns[i] - 2));
 
                 linesPerCell.forEach((textLines, i) => {
@@ -773,14 +752,14 @@ async function generateDailyReportPdf() {
                 const attachmentColIndex = columnHeaders.indexOf('Attachment');
                 const attachmentX = 10 + finalColumnWidths.slice(0, attachmentColIndex).reduce((sum, width) => sum + width, 0);
                 
-                if (img) {
-                    const imageY = y + rowPadding + ((rowContentHeight - imageHeight) / 2);
-                    doc.addImage(img, 'JPEG', attachmentX + 2, imageY, imageWidth, imageHeight);
+                
+                if (attachmentLink.match(/\.(jpeg|jpg|gif|png|webp)$/i)) {
+                     const imageY = y + rowPadding + ((rowContentHeight - imageHeight) / 2);
+                     doc.addImage(img, 'JPEG', attachmentX + 2, imageY, imageWidth, imageHeight);
                 } else if (attachmentLink.startsWith('http')) {
                     const linkText = 'View';
                     doc.setTextColor(0, 0, 255);
-                    const linkY = y + rowPadding + (rowContentHeight / 2);
-                    doc.textWithLink(linkText, attachmentX + 2, linkY, { url: attachmentLink });
+                    doc.textWithLink(linkText, attachmentX + 2, y + 5, { url: attachmentLink });
                     doc.setTextColor(0);
                 } else {
                     const textY = y + rowPadding + (rowContentHeight / 2);
@@ -790,16 +769,12 @@ async function generateDailyReportPdf() {
                 y += rowHeight;
                 doc.line(10, y, doc.internal.pageSize.width - 10, y);
                 y += 2;
-            }
+            });
         }
-
         doc.save(`Daily_Report_${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}.pdf`);
-        showCustomAlert('PDF report generated successfully!');
-
+        showMessageModal('Laporan PDF berhasil dibuat!');
     } catch (error) {
-        showCustomAlert('An error occurred while generating the PDF report. Please try again. Detail: ' + error.message);
-    } finally {
-        hideLoading();
+        showMessageModal('Terjadi kesalahan saat membuat laporan PDF. Detail: ' + error.message);
     }
 }
 
@@ -1161,7 +1136,8 @@ taskForm.addEventListener('submit', async (e) => {
             'Priority': prioritySelect.value,
             'Attachment Link': finalAttachmentUrl,
             isPinned: false, 
-            pinnedBy: null
+            pinnedBy: null,
+            'source': 'dashboard' // NEW: Tambahkan penanda sumber
         };
         
         if (workStatusSelect.value === 'Final Touch') {
