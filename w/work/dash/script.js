@@ -39,6 +39,7 @@ const sortSelect = document.getElementById('sort-select');
 const taskIdInput = document.getElementById('taskId');
 const projectNameInput = document.getElementById('projectName');
 const activityInput = document.getElementById('activity');
+const propertySelect = document.getElementById('propertySelect'); // NEW: Tambahkan elemen dropdown Property
 const platformSelect = document.getElementById('platform');
 const otherPlatformGroup = document.getElementById('otherPlatformGroup');
 const otherPlatformInput = document.getElementById('otherPlatformInput');
@@ -373,6 +374,7 @@ function renderTasks() {
                 <div class="task-details">
                     <div class="task-details-content">
                         <p class="task-details-text"><strong>Activity:</strong> ${task['Activity / Task'] || '-'}</p>
+                        <p class="task-details-text"><strong>Property:</strong> ${task['Property'] || '-'}</p> <!-- NEW: Tambahkan baris untuk Property -->
                         <p class="task-details-text"><strong>Platform:</strong> ${formatMultiSelectDisplay(task['Platform'])}</p>
                         <p class="task-details-text"><strong>Approval:</strong> <span class="status-badge ${getStatusBadgeClass(task['Approval Status'])}">${task['Approval Status'] || '-'}</span></p>
                         <p class="task-details-text"><strong>PIC:</strong> ${formatMultiSelectDisplay(task['PIC / Team'])}</p>
@@ -434,6 +436,7 @@ function showTaskForm(taskData = null) {
         taskIdInput.value = taskData['Task ID'];
         projectNameInput.value = taskData['Project Name'] || '';
         activityInput.value = taskData['Activity / Task'] || '';
+        propertySelect.value = taskData['Property'] || ''; // NEW: Isi nilai Property
         notesInput.value = taskData['Notes'] || '';
         deadlineInput.value = taskData['Deadline'] ? new Date(taskData['Deadline']).toISOString().split('T')[0] : '';
         prioritySelect.value = taskData['Priority'] || 'Low';
@@ -469,9 +472,9 @@ function showTaskForm(taskData = null) {
             Array.from(platformSelect.options).forEach(option => {
                 option.selected = platforms.includes(option.value);
             });
-            if (platforms.includes('Other')) {
+            if (platforms.includes('Lainnya')) {
                 otherPlatformGroup.style.display = 'block';
-                const nonDefaultPlatforms = platforms.filter(p => !Array.from(platformSelect.options).map(o => o.value).includes(p));
+                const nonDefaultPlatforms = platforms.filter(p => p !== 'Lainnya');
                 if (nonDefaultPlatforms.length > 0) {
                     otherPlatformInput.value = nonDefaultPlatforms.join(', ');
                 }
@@ -495,6 +498,7 @@ function showTaskForm(taskData = null) {
         taskIdInput.value = '';
         projectNameInput.value = '';
         activityInput.value = '';
+        propertySelect.value = ''; // NEW: Reset Property dropdown
         notesInput.value = '';
         deadlineInput.value = '';
         workStatusSelect.value = 'Editing';
@@ -540,14 +544,15 @@ async function archiveTask(taskId) {
         const result = await response.json();
         if (result.status === 'success') {
             showCustomAlert('Task archived successfully!');
-            fetchTasks();
         } else {
             showCustomAlert('Failed to archive task: ' + result.message);
         }
     } catch (error) {
         showCustomAlert('An error occurred while archiving the task. Please try again. Detail: ' + error.message);
     } finally {
+        // PERBAIKAN: Memastikan UI selalu diperbarui setelah operasi selesai
         hideLoading();
+        fetchTasks();
     }
 }
 
@@ -566,15 +571,16 @@ async function restoreTask(taskId) {
         const result = await response.json();
         if (result.status === 'success') {
             showCustomAlert('Task restored successfully!');
-            fetchTasks(); 
-            closeArchiveListModal();
         } else {
             showCustomAlert('Failed to restore task: ' + result.message);
         }
     } catch (error) {
         showCustomAlert('An error occurred while restoring the task. Please try again. Detail: ' + error.message);
     } finally {
+        // PERBAIKAN: Memastikan UI selalu diperbarui dan modal tertutup
         hideLoading();
+        fetchTasks();
+        closeArchiveListModal();
     }
 }
 
@@ -650,10 +656,12 @@ async function generateDailyReportPdf() {
         if (activeTasks.length === 0) {
             doc.text('No active tasks to report today.', 10, y + 10);
         } else {
+            // PERBAIKAN: Ubah urutan kolom sesuai permintaan dan hapus "Priority"
             const columnHeaders = [
-                'Priority', 'Status', 'Deadline', 'Project', 'Activity', 'Platform', 'Approval', 'PIC / Team', 'Attachment'
+                'Project', 'Activity', 'Platform', 'Status', 'Deadline', 'PIC / Team', 'Approval', 'Attachment'
             ];
-            const finalColumnWidths = [15, 30, 20, 40, 40, 30, 30, 20, 20];
+            // PERBAIKAN: Sesuaikan lebar kolom dengan urutan baru
+            const finalColumnWidths = [40, 40, 30, 30, 20, 30, 30, 20];
 
             doc.setFont('helvetica', 'bold');
             let currentX = 10;
@@ -712,15 +720,15 @@ async function generateDailyReportPdf() {
                     }
                 }
 
+                // PERBAIKAN: Ubah urutan data baris dan hapus "Priority"
                 const rowData = [
-                    task['Priority'] || '-',
-                    taskStatusDisplay,
-                    formattedDeadline,
                     task['Project Name'] || '-',
                     task['Activity / Task'] || '-',
                     task['Platform'] || '-',
-                    task['Approval Status'] || '-',
-                    task['PIC / Team'] || '-'
+                    taskStatusDisplay,
+                    formattedDeadline,
+                    task['PIC / Team'] || '-',
+                    task['Approval Status'] || '-'
                 ];
 
                 let imageHeight = 0;
@@ -753,12 +761,13 @@ async function generateDailyReportPdf() {
                 }
 
                 currentX = 10;
-                const linesPerCell = rowData.map((cellText, i) => doc.splitTextToSize(cellText, finalColumnWidths[i] - 2));
+                const textColumns = finalColumnWidths.slice(0, -1); // Ambil semua lebar kecuali kolom Attachment
+                const linesPerCell = rowData.map((cellText, i) => doc.splitTextToSize(cellText, textColumns[i] - 2));
 
                 linesPerCell.forEach((textLines, i) => {
                     const textY = y + rowPadding + ((rowContentHeight - (textLines.length * (doc.getLineHeight() / doc.internal.scaleFactor))) / 2);
                     doc.text(textLines, currentX, textY);
-                    currentX += finalColumnWidths[i];
+                    currentX += textColumns[i];
                 });
 
                 const attachmentColIndex = columnHeaders.indexOf('Attachment');
@@ -865,16 +874,17 @@ async function togglePinTask(taskId) {
                 showCustomAlert('Task pin status updated successfully!');
                 currentTask.isPinned = isPinned;
                 currentTask.pinnedBy = isPinned ? currentLoggedInUser : null;
-                renderTasks();
             } else {
                 showCustomAlert('Failed to update task pin status: ' + result.message);
             }
         } catch (error) {
             showCustomAlert('An error occurred while updating the task pin status. Please try again. Detail: ' + error.message);
         } finally {
-        hideLoading();
+            // PERBAIKAN: Memastikan UI selalu diperbarui setelah operasi selesai
+            hideLoading();
+            fetchTasks();
+        }
     }
-}
 }
 
 
@@ -1053,7 +1063,7 @@ finalTouchProgressInput.addEventListener('input', () => {
 
 platformSelect.addEventListener('change', () => {
     const selectedOptions = Array.from(platformSelect.options).filter(option => option.selected).map(option => option.value);
-    if (selectedOptions.includes('Other')) {
+    if (selectedOptions.includes('Lainnya')) {
         otherPlatformGroup.style.display = 'block';
     } else {
         otherPlatformGroup.style.display = 'none';
@@ -1096,10 +1106,18 @@ taskForm.addEventListener('submit', async (e) => {
 
     const selectedPlatforms = Array.from(platformSelect.options).filter(option => option.selected).map(option => option.value);
     let platformValue = selectedPlatforms.join(', ');
-    if (selectedPlatforms.includes('Other') && otherPlatformInput.value.trim() !== '') {
-        platformValue += `, ${otherPlatformInput.value.trim()}`;
+    if (selectedPlatforms.includes('Lainnya') && otherPlatformInput.value.trim() !== '') {
+        const otherPlatforms = otherPlatformInput.value.trim().split(',').map(p => p.trim()).filter(p => p);
+        platformValue = selectedPlatforms.filter(p => p !== 'Lainnya').concat(otherPlatforms).join(', ');
     }
-
+    
+    if (platformValue.startsWith(', ')) {
+        platformValue = platformValue.substring(2);
+    }
+    if (platformValue.endsWith(', ')) {
+        platformValue = platformValue.substring(0, platformValue.length - 2);
+    }
+    
     const selectedPICs = Array.from(picTeamSelect.options).filter(option => option.selected).map(option => option.value);
     const picTeamValue = selectedPICs.join(', ');
 
@@ -1133,6 +1151,7 @@ taskForm.addEventListener('submit', async (e) => {
             'Task ID': taskIdInput.value,
             'Project Name': projectNameInput.value.trim(),
             'Activity / Task': activityInput.value.trim(),
+            'Property': propertySelect.value, // NEW: Ambil nilai Property
             'Platform': platformValue,
             'Work Status': workStatusSelect.value,
             'Approval Status': approvalStatusSelect.value,
@@ -1153,7 +1172,6 @@ taskForm.addEventListener('submit', async (e) => {
 
         if (!taskData['Activity / Task'] || !taskData['PIC / Team']) {
             showCustomAlert('Activity and PIC / Team must be filled in.');
-            hideLoading();
             return;
         }
         
@@ -1172,14 +1190,15 @@ taskForm.addEventListener('submit', async (e) => {
 
         if (result.status === 'success') {
             showCustomAlert('Task saved successfully!');
-            hideTaskForm();
-            fetchTasks(); 
         } else {
             showCustomAlert('Failed to save task: ' + result.message);
         }
     } catch (error) {
         showCustomAlert('An error occurred while saving the task. Please try again. Detail: ' + error.message);
     } finally {
+        // PERBAIKAN: Pindahkan pemanggilan ini ke sini untuk memastikan alur konsisten
         hideLoading();
+        hideTaskForm();
+        fetchTasks();
     }
 });
