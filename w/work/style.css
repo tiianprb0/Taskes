@@ -746,8 +746,9 @@ body[data-theme="dark-mode"] .task-btn:hover {
     flex-direction: column;
     gap: 0.5rem;
 }
+/* Memperbaiki masalah konten yang terpotong dengan menambah max-height */
 .task-item.expanded .task-details {
-    max-height: 500px;
+    max-height: 1000px;
 }
 
 .task-details-text {
@@ -957,7 +958,6 @@ body[data-theme="dark-mode"] .task-btn:hover {
     box-shadow: 1px 1px 0 var(--theme-border-color);
     transform: translate(1px, 1px);
 }
-
 
 /* Modal Styling */
 .modal-overlay {
@@ -1312,4 +1312,54 @@ footer {
         opacity: 1;
         transform: translateY(0);
     }
+}
+
+/* ==================================== */
+/* Perbaikan UI berdasarkan laporan bug */
+/* ==================================== */
+
+/* Mengatasi tumpang tindih tema di header */
+.header .theme-options {
+    position: relative;
+    top: auto;
+    left: auto;
+    transform: none;
+    display: flex;
+}
+
+/* Mengatur ulang layout settings-panel */
+.settings-panel {
+    z-index: 10000; /* Pastikan di atas elemen lain */
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 20px;
+    overflow-y: auto; /* Memungkinkan scrolling jika konten terlalu panjang */
+    background-color: var(--theme-container-background); /* Menggunakan warna yang jelas */
+}
+
+/* Mengatasi masalah tombol tema di dalam settings panel */
+.settings-panel .theme-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 0;
+}
+
+/* Menambahkan style untuk tombol lampiran agar selalu terlihat di header tugas */
+.task-actions .view-attachment-button {
+    color: var(--color-text-secondary);
+    transition: color 0.2s ease;
+    font-size: 1rem;
+    background-color: transparent;
+    border: none;
+    padding: 0;
+    width: 25px;
+    height: 25px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.task-actions .view-attachment-button:hover {
+    color: var(--theme-primary-color);
 }
