@@ -163,19 +163,24 @@ async function checkLoginStatus() {
 }
 
 async function fetchTasks() {
+    const startTime = performance.now();
+    console.log(`[${startTime.toFixed(2)}ms] fetchTasks: Memulai pengambilan data tugas.`);
     showLoading();
     try {
         const url = `../task_queue.json?t=${new Date().getTime()}`;
         const response = await fetch(url);
         if (!response.ok) {
+            console.warn(`[${performance.now().toFixed(2)}ms] fetchTasks: Gagal mengambil data. Status HTTP: ${response.status}`);
             if (response.status === 404) {
                 allTasks = [];
+                console.warn(`[${performance.now().toFixed(2)}ms] fetchTasks: File tidak ditemukan (404), mengatur daftar tugas menjadi kosong.`);
                 renderTasks();
                 return;
             }
             const responseText = await response.text();
             if (response.status === 200 && responseText.trim() === '[]') {
                 allTasks = [];
+                console.log(`[${performance.now().toFixed(2)}ms] fetchTasks: Respon kosong, mengatur daftar tugas menjadi kosong.`);
                 renderTasks();
                 return;
             }
@@ -183,16 +188,23 @@ async function fetchTasks() {
         }
         const result = await response.json();
         allTasks = result;
+        console.log(`[${performance.now().toFixed(2)}ms] fetchTasks: Data berhasil dimuat. Jumlah tugas: ${allTasks.length}.`);
         
         renderTasks();
     } catch (error) {
+        console.error(`[${performance.now().toFixed(2)}ms] fetchTasks: Terjadi kesalahan saat mengambil data tugas.`, error);
         showCustomAlert('An error occurred while fetching task data. Please try again. Detail: ' + error.message);
     } finally {
+        const endTime = performance.now();
+        console.log(`[${endTime.toFixed(2)}ms] fetchTasks: Operasi selesai dalam ${(endTime - startTime).toFixed(2)}ms. Menyembunyikan loading overlay.`);
         hideLoading();
     }
 }
 
 function renderTasks() {
+    console.log(`[${performance.now().toFixed(2)}ms] renderTasks: Memulai rendering.`);
+    console.log(`[${performance.now().toFixed(2)}ms] renderTasks: Status saat ini -> allTasks.length = ${allTasks.length}, currentFilter = '${currentFilter}', currentSearch = '${currentSearch}'.`);
+    
     taskList.innerHTML = '';
     
     let tasksToDisplay = allTasks.filter(task => task['Work Status'] !== 'Archived');
@@ -206,6 +218,7 @@ function renderTasks() {
             }
             return false;
         });
+        console.log(`[${performance.now().toFixed(2)}ms] renderTasks: Filter 'My Tasks' diterapkan. Jumlah tugas yang ditampilkan: ${tasksToDisplay.length}`);
     }
 
     // Menerapkan pencarian
@@ -216,187 +229,189 @@ function renderTasks() {
                 String(value).toLowerCase().includes(searchTerm)
             );
         });
+        console.log(`[${performance.now().toFixed(2)}ms] renderTasks: Pencarian '${currentSearch}' diterapkan. Jumlah tugas yang ditampilkan: ${tasksToDisplay.length}`);
     }
-
-    // Menerapkan pengurutan
-    tasksToDisplay.sort((a, b) => {
-        const isPinnedA = a.isPinned ? 1 : 0;
-        const isPinnedB = b.isPinned ? 1 : 0;
-        if (isPinnedA !== isPinnedB) {
-            return isPinnedB - isPinnedA;
-        }
-
-        if (currentSort === 'deadline') {
-            const dateA = a['Deadline'] ? new Date(a['Deadline']) : new Date('9999-12-31');
-            const dateB = b['Deadline'] ? new Date(b['Deadline']) : new Date('9999-12-31');
-            return dateA - dateB;
-        } else if (currentSort === 'priority') {
-            const priorityOrder = { 'High': 3, 'Medium': 2, 'Low': 1 };
-            const priorityA = priorityOrder[a['Priority']] || 0;
-            const priorityB = priorityOrder[b['Priority']] || 0;
-            return priorityB - priorityA;
-        }
-        return 0;
-    });
 
 
     if (tasksToDisplay.length === 0) {
+        console.log(`[${performance.now().toFixed(2)}ms] renderTasks: Tidak ada tugas untuk ditampilkan. Menampilkan empty state.`);
         emptyState.style.display = 'block';
-        return;
-    }
-
-    emptyState.style.display = 'none';
-
-    tasksToDisplay.forEach(task => {
-        const taskItem = document.createElement('li');
-        const isTaskPinned = task.isPinned || false;
-        taskItem.className = `task-item ${isTaskPinned ? 'pinned' : ''}`;
-        taskItem.dataset.taskId = task['Task ID'];
-
-        const getStatusBadgeClass = (status) => {
-            switch (status) {
-                case 'Editing': return 'editing';
-                case 'Take Konten': return 'take-konten';
-                case 'Final Touch': return 'final-touch';
-                case 'Done': return 'done';
-                case 'On Hold': return 'on-hold';
-                case 'Archived': return 'archived';
-                case 'Approved': return 'approved';
-                case 'To Be Announced (TBA)': return 'to-be-announced';
-                case 'Revised': return 'revised';
-                default: return '';
-            }
-        };
-
-        const getPriorityBadgeClass = (priority) => {
-            switch (priority) {
-                case 'High': return 'high';
-                case 'Medium': return 'medium';
-                case 'Low': return 'low';
-                default: return '';
-            }
-        };
-
-        const formatMultiSelectDisplay = (value) => {
-            if (!value) return '-';
-            const items = value.split(',').map(item => item.trim());
-            return items.length > 0 ? items.join(', ') : '-';
-        };
-
-        const taskStatusDisplay = task['Work Status'] === 'Final Touch' && task['Progress (%)']
-                                 ? `${task['Work Status']} (${task['Progress (%)']}%)`
-                                 : task['Work Status'] || '-';
+    } else {
+        console.log(`[${performance.now().toFixed(2)}ms] renderTasks: Menampilkan ${tasksToDisplay.length} tugas.`);
+        emptyState.style.display = 'none';
         
-        let formattedDeadline = '';
-        if (task['Deadline']) {
-            const dateObj = new Date(task['Deadline']);
-            if (!isNaN(dateObj.getTime())) {
-                const day = String(dateObj.getDate()).padStart(2, '0');
-                const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-                formattedDeadline = `${day}/${month}`;
+        // Menerapkan pengurutan
+        tasksToDisplay.sort((a, b) => {
+            const isPinnedA = a.isPinned ? 1 : 0;
+            const isPinnedB = b.isPinned ? 1 : 0;
+            if (isPinnedA !== isPinnedB) {
+                return isPinnedB - isPinnedA;
             }
-        }
 
-        let pinnedByHtml = '';
-        if (isTaskPinned && task.pinnedBy) {
-            pinnedByHtml = `
-            <div class="task-meta-item">
-                <i class="fas fa-user-tag"></i><span>Pinned by ${task.pinnedBy}</span>
-            </div>
-            `;
-        }
-        
-        let attachmentButtonHtml = '';
-        if (task['Attachment Link']) {
-            if (task['Attachment Link'].match(/\.(jpeg|jpg|gif|png|webp)$/i)) {
-                attachmentButtonHtml = `
-                    <p class="task-details-text">
-                        <strong>Attachment:</strong>
-                        <button class="task-btn view-attachment-button" data-type="image" data-link="${task['Attachment Link']}">
-                           <i class="fas fa-image"></i>
+            if (currentSort === 'deadline') {
+                const dateA = a['Deadline'] ? new Date(a['Deadline']) : new Date('9999-12-31');
+                const dateB = b['Deadline'] ? new Date(b['Deadline']) : new Date('9999-12-31');
+                return dateA - dateB;
+            } else if (currentSort === 'priority') {
+                const priorityOrder = { 'High': 3, 'Medium': 2, 'Low': 1 };
+                const priorityA = priorityOrder[a['Priority']] || 0;
+                const priorityB = priorityOrder[b['Priority']] || 0;
+                return priorityB - priorityA;
+            }
+            return 0;
+        });
+
+        tasksToDisplay.forEach(task => {
+            const taskItem = document.createElement('li');
+            const isTaskPinned = task.isPinned || false;
+            taskItem.className = `task-item ${isTaskPinned ? 'pinned' : ''}`;
+            taskItem.dataset.taskId = task['Task ID'];
+
+            const getStatusBadgeClass = (status) => {
+                switch (status) {
+                    case 'Editing': return 'editing';
+                    case 'Take Konten': return 'take-konten';
+                    case 'Final Touch': return 'final-touch';
+                    case 'Done': return 'done';
+                    case 'On Hold': return 'on-hold';
+                    case 'Archived': return 'archived';
+                    case 'Approved': return 'approved';
+                    case 'To Be Announced (TBA)': return 'to-be-announced';
+                    case 'Revised': return 'revised';
+                    default: return '';
+                }
+            };
+
+            const getPriorityBadgeClass = (priority) => {
+                switch (priority) {
+                    case 'High': return 'high';
+                    case 'Medium': return 'medium';
+                    case 'Low': return 'low';
+                    default: return '';
+                }
+            };
+
+            const formatMultiSelectDisplay = (value) => {
+                if (!value) return '-';
+                const items = value.split(',').map(item => item.trim());
+                return items.length > 0 ? items.join(', ') : '-';
+            };
+
+            const taskStatusDisplay = task['Work Status'] === 'Final Touch' && task['Progress (%)']
+                                     ? `${task['Work Status']} (${task['Progress (%)']}%)`
+                                     : task['Work Status'] || '-';
+            
+            let formattedDeadline = '';
+            if (task['Deadline']) {
+                const dateObj = new Date(task['Deadline']);
+                if (!isNaN(dateObj.getTime())) {
+                    const day = String(dateObj.getDate()).padStart(2, '0');
+                    const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+                    formattedDeadline = `${day}/${month}`;
+                }
+            }
+
+            let pinnedByHtml = '';
+            if (isTaskPinned && task.pinnedBy) {
+                pinnedByHtml = `
+                <div class="task-meta-item">
+                    <i class="fas fa-user-tag"></i><span>Pinned by ${task.pinnedBy}</span>
+                </div>
+                `;
+            }
+            
+            let attachmentButtonHtml = '';
+            if (task['Attachment Link']) {
+                if (task['Attachment Link'].match(/\.(jpeg|jpg|gif|png|webp)$/i)) {
+                    attachmentButtonHtml = `
+                        <p class="task-details-text">
+                            <strong>Attachment:</strong>
+                            <button class="task-btn view-attachment-button" data-type="image" data-link="${task['Attachment Link']}">
+                               <i class="fas fa-image"></i>
+                            </button>
+                        </p>`;
+                } else if (task['Attachment Link'].startsWith('http')) {
+                    attachmentButtonHtml = `
+                        <p class="task-details-text">
+                            <strong>Attachment:</strong>
+                            <a href="${task['Attachment Link']}" target="_blank" class="task-btn">
+                                <i class="fas fa-external-link-alt"></i>
+                            </a>
+                        </p>`;
+                }
+            }
+            
+            let detailsContent = '';
+            if (task['Notes']) {
+                detailsContent += `<p class="task-details-text"><strong>Notes:</strong> ${task['Notes']}</p>`;
+            }
+            detailsContent += attachmentButtonHtml; // Memindahkan tombol attachment ke dalam detail tugas
+
+            taskItem.innerHTML = `
+                <div class="task-header">
+                    <div class="task-title-and-meta">
+                        <span class="task-title">${task['Project Name'] || '-'}</span>
+                        <div class="task-meta">
+                            <div class="task-meta-item">
+                                <span class="priority-text-badge ${getPriorityBadgeClass(task['Priority'])}">${task['Priority'] || '-'}</span>
+                            </div>
+                            <div class="task-meta-item">
+                                <span class="status-badge ${getStatusBadgeClass(task['Work Status'])}">${taskStatusDisplay}</span>
+                            </div>
+                            ${task['Deadline'] ? `<div class="task-meta-item"><i class="fas fa-calendar-alt"></i><span>${formattedDeadline}</span></div>` : ''}
+                            ${pinnedByHtml}
+                        </div>
+                    </div>
+                    <div class="task-actions">
+                        <button class="task-btn pin-button" data-task-id="${task['Task ID']}">
+                            <i class="${isTaskPinned ? 'fas' : 'far'} fa-thumbtack"></i>
                         </button>
-                    </p>`;
-            } else if (task['Attachment Link'].startsWith('http')) {
-                attachmentButtonHtml = `
-                    <p class="task-details-text">
-                        <strong>Attachment:</strong>
-                        <a href="${task['Attachment Link']}" target="_blank" class="task-btn">
-                            <i class="fas fa-external-link-alt"></i>
-                        </a>
-                    </p>`;
-            }
-        }
-        
-        let detailsContent = '';
-        if (task['Notes']) {
-            detailsContent += `<p class="task-details-text"><strong>Notes:</strong> ${task['Notes']}</p>`;
-        }
-        detailsContent += attachmentButtonHtml; // Memindahkan tombol attachment ke dalam detail tugas
-
-        taskItem.innerHTML = `
-            <div class="task-header">
-                <div class="task-title-and-meta">
-                    <span class="task-title">${task['Project Name'] || '-'}</span>
-                    <div class="task-meta">
-                        <div class="task-meta-item">
-                            <span class="priority-text-badge ${getPriorityBadgeClass(task['Priority'])}">${task['Priority'] || '-'}</span>
-                        </div>
-                        <div class="task-meta-item">
-                            <span class="status-badge ${getStatusBadgeClass(task['Work Status'])}">${taskStatusDisplay}</span>
-                        </div>
-                        ${task['Deadline'] ? `<div class="task-meta-item"><i class="fas fa-calendar-alt"></i><span>${formattedDeadline}</span></div>` : ''}
-                        ${pinnedByHtml}
+                        <button class="task-btn edit-button" data-task-id="${task['Task ID']}"><i class="fas fa-edit"></i></button>
+                        <button class="task-btn archive-button" data-task-id="${task['Task ID']}"><i class="fas fa-box-archive"></i></button>
                     </div>
                 </div>
-                <div class="task-actions">
-                    <button class="task-btn pin-button" data-task-id="${task['Task ID']}">
-                        <i class="${isTaskPinned ? 'fas' : 'far'} fa-thumbtack"></i>
-                    </button>
-                    <button class="task-btn edit-button" data-task-id="${task['Task ID']}"><i class="fas fa-edit"></i></button>
-                    <button class="task-btn archive-button" data-task-id="${task['Task ID']}"><i class="fas fa-box-archive"></i></button>
+                <div class="task-details">
+                    <div class="task-details-content">
+                        <p class="task-details-text"><strong>Activity:</strong> ${task['Activity / Task'] || '-'}</p>
+                        <p class="task-details-text"><strong>Platform:</strong> ${formatMultiSelectDisplay(task['Platform'])}</p>
+                        <p class="task-details-text"><strong>Approval:</strong> <span class="status-badge ${getStatusBadgeClass(task['Approval Status'])}">${task['Approval Status'] || '-'}</span></p>
+                        <p class="task-details-text"><strong>PIC:</strong> ${formatMultiSelectDisplay(task['PIC / Team'])}</p>
+                        ${detailsContent}
+                    </div>
                 </div>
-            </div>
-            <div class="task-details">
-                <div class="task-details-content">
-                    <p class="task-details-text"><strong>Activity:</strong> ${task['Activity / Task'] || '-'}</p>
-                    <p class="task-details-text"><strong>Platform:</strong> ${formatMultiSelectDisplay(task['Platform'])}</p>
-                    <p class="task-details-text"><strong>Approval:</strong> <span class="status-badge ${getStatusBadgeClass(task['Approval Status'])}">${task['Approval Status'] || '-'}</span></p>
-                    <p class="task-details-text"><strong>PIC:</strong> ${formatMultiSelectDisplay(task['PIC / Team'])}</p>
-                    ${detailsContent}
-                </div>
-            </div>
-        `;
-        
-        taskItem.querySelector('.task-header').addEventListener('click', (e) => {
-            if (e.target.closest('.task-actions')) {
-                return;
-            }
-            taskItem.classList.toggle('expanded');
-        });
-
-        taskItem.querySelector('.edit-button').addEventListener('click', () => showTaskForm(task));
-        taskItem.querySelector('.archive-button').addEventListener('click', (e) => {
-            e.stopPropagation();
-            archiveTask(task['Task ID']);
-        });
-        taskItem.querySelector('.pin-button').addEventListener('click', (e) => {
-            e.stopPropagation();
-            togglePinTask(task['Task ID']);
-        });
-        const viewButton = taskItem.querySelector('.view-attachment-button');
-        if (viewButton) {
-            viewButton.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const link = e.target.dataset.link || e.target.closest('button').dataset.link;
-                if (link) {
-                    imagePopupImage.src = link;
-                    imagePopupModal.classList.add('active');
+            `;
+            
+            taskItem.querySelector('.task-header').addEventListener('click', (e) => {
+                if (e.target.closest('.task-actions')) {
+                    return;
                 }
+                taskItem.classList.toggle('expanded');
             });
-        }
-        
-        taskList.appendChild(taskItem);
-    });
+
+            taskItem.querySelector('.edit-button').addEventListener('click', () => showTaskForm(task));
+            taskItem.querySelector('.archive-button').addEventListener('click', (e) => {
+                e.stopPropagation();
+                archiveTask(task['Task ID']);
+            });
+            taskItem.querySelector('.pin-button').addEventListener('click', (e) => {
+                e.stopPropagation();
+                togglePinTask(task['Task ID']);
+            });
+            const viewButton = taskItem.querySelector('.view-attachment-button');
+            if (viewButton) {
+                viewButton.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const link = e.target.dataset.link || e.target.closest('button').dataset.link;
+                    if (link) {
+                        imagePopupImage.src = link;
+                        imagePopupModal.classList.add('active');
+                    }
+                });
+            }
+            
+            taskList.appendChild(taskItem);
+        });
+    }
 }
 
 function showTaskForm(taskData = null) {
@@ -686,7 +701,7 @@ async function generateDailyReportPdf() {
                                           (task['Work Status'] === 'Final Touch' && task['Progress (%)']
                                            ? ` (${task['Progress (%)']}%)` : '');
                 
-                let formattedDeadline = task['Deadline'] || '-';
+                let formattedDeadline = '';
                 if (task['Deadline']) {
                     const dateObj = new Date(task['Deadline']);
                     if (!isNaN(dateObj.getTime())) {
@@ -772,7 +787,7 @@ async function generateDailyReportPdf() {
         showCustomAlert('PDF report generated successfully!');
 
     } catch (error) {
-        showCustomAlert('Failed to generate PDF report. Please try again. Detail: ' + error.message);
+        showCustomAlert('An error occurred while generating the PDF report. Please try again. Detail: ' + error.message);
     } finally {
         hideLoading();
     }
@@ -780,8 +795,6 @@ async function generateDailyReportPdf() {
 
 
 function openSetPinDashboardModal() {
-    dashboardNewPinInput.value = '';
-    dashboardPinErrorMessage.textContent = '';
     setPinDashboardModal.classList.add('active');
 }
 
@@ -816,7 +829,7 @@ async function updateUserData(username, pin, firstLoginDone = null) {
         }
         const result = await response.json();
         if (result.status === 'success') {
-            showCustomAlert(result.message);
+            showCustomAlert('User data updated successfully!');
             return true;
         } else {
             throw new Error(result.message || 'Failed to update user data.');
@@ -866,20 +879,30 @@ async function togglePinTask(taskId) {
 
 // --- EVENT LISTENERS ---
 document.addEventListener('DOMContentLoaded', async () => {
+    const time = performance.now();
+    console.log(`[${time.toFixed(2)}ms] DOMContentLoaded: Memuat tema dan memeriksa status login.`);
     loadTheme();
     currentLoggedInUser = await checkLoginStatus();
     if (currentLoggedInUser) {
+        console.log(`[${performance.now().toFixed(2)}ms] DOMContentLoaded: Pengguna login, memulai fetchTasks.`);
         fetchTasks();
     }
 });
 
 logoutButton.addEventListener('click', () => {
+    console.log(`[${performance.now().toFixed(2)}ms] Logout button diklik.`);
     localStorage.removeItem(SESSION_KEY);
     window.location.href = '../index.html';
 });
 
-setPinDashboardText.addEventListener('click', openSetPinDashboardModal);
-archiveTasksText.addEventListener('click', openArchiveListModal);
+setPinDashboardText.addEventListener('click', () => {
+    console.log(`[${performance.now().toFixed(2)}ms] Set PIN button diklik.`);
+    openSetPinDashboardModal();
+});
+archiveTasksText.addEventListener('click', () => {
+    console.log(`[${performance.now().toFixed(2)}ms] View Archived Tasks button diklik.`);
+    openArchiveListModal();
+});
 
 closePinDashboardModalButton.addEventListener('click', closeSetPinDashboardModal);
 cancelDashboardPinButton.addEventListener('click', closeSetPinDashboardModal);
@@ -918,6 +941,7 @@ imagePopupModal.addEventListener('click', (e) => {
 });
 
 saveDashboardPinButton.addEventListener('click', async () => {
+    console.log(`[${performance.now().toFixed(2)}ms] Save PIN button diklik.`);
     const newPin = dashboardNewPinInput.value.trim();
     dashboardPinErrorMessage.textContent = '';
 
@@ -934,6 +958,7 @@ saveDashboardPinButton.addEventListener('click', async () => {
 
 themeOptionsButtons.forEach(button => {
     button.addEventListener('click', (e) => {
+        console.log(`[${performance.now().toFixed(2)}ms] Theme button '${e.target.dataset.theme}' diklik.`);
         const theme = e.target.dataset.theme;
         if (theme) {
             setTheme(theme);
@@ -942,6 +967,7 @@ themeOptionsButtons.forEach(button => {
 });
 
 filterAllButton.addEventListener('click', () => {
+    console.log(`[${performance.now().toFixed(2)}ms] Tombol 'All' diklik.`);
     currentFilter = 'all';
     searchInput.value = '';
     currentSearch = '';
@@ -951,6 +977,7 @@ filterAllButton.addEventListener('click', () => {
 });
 
 filterMyButton.addEventListener('click', () => {
+    console.log(`[${performance.now().toFixed(2)}ms] Tombol 'My Tasks' diklik.`);
     currentFilter = 'my';
     searchInput.value = '';
     currentSearch = '';
@@ -961,28 +988,44 @@ filterMyButton.addEventListener('click', () => {
 
 
 sortSelect.addEventListener('change', (e) => {
+    console.log(`[${performance.now().toFixed(2)}ms] Sort selection diubah menjadi '${e.target.value}'.`);
     currentSort = e.target.value;
     renderTasks();
 });
 
 searchButton.addEventListener('click', () => {
+    console.log(`[${performance.now().toFixed(2)}ms] Search button diklik. Mengubah tampilan search bar.`);
     searchBar.style.display = searchBar.style.display === 'block' ? 'none' : 'block';
     searchInput.focus();
 });
 searchInput.addEventListener('input', (e) => {
     currentSearch = e.target.value;
+    console.log(`[${performance.now().toFixed(2)}ms] Search input: '${currentSearch}'`);
     renderTasks();
 });
 
+// Perbaikan: Menambahkan console.log untuk melacak alur
 hamburgerMenu.addEventListener('click', () => {
+    console.log(`[${performance.now().toFixed(2)}ms] Hamburger menu diklik. Membuka panel pengaturan.`);
     settingsPanel.classList.add('active');
 });
 closeSettingsButton.addEventListener('click', () => {
+    console.log(`[${performance.now().toFixed(2)}ms] Tombol tutup panel diklik. Menutup panel pengaturan.`);
     settingsPanel.classList.remove('active');
+    // PERBAIKAN: Reset filter pencarian saat menu ditutup agar tampilan kembali normal.
+    currentSearch = '';
+    searchInput.value = '';
+    renderTasks();
 });
 settingsPanel.addEventListener('click', (e) => {
+    // Menutup panel jika klik di luar
     if (e.target === settingsPanel) {
-        closeSettingsButton.click();
+        console.log(`[${performance.now().toFixed(2)}ms] Klik di luar panel. Menutup panel pengaturan.`);
+        settingsPanel.classList.remove('active');
+        // PERBAIKAN: Reset filter pencarian saat menu ditutup agar tampilan kembali normal.
+        currentSearch = '';
+        searchInput.value = '';
+        renderTasks();
     }
 });
 
@@ -1033,32 +1076,6 @@ attachmentTypeRadios.forEach(radio => {
     });
 });
 
-attachmentFileInput.addEventListener('change', (e) => {
-    const file = e.target.files[0];
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = function(event) {
-            imagePreview.src = event.target.result;
-            imagePreviewContainer.style.display = 'flex';
-        };
-        reader.readAsDataURL(file);
-    } else {
-        imagePreview.src = '#';
-        imagePreviewContainer.style.display = 'none';
-    }
-});
-
-attachmentLinkInput.addEventListener('input', () => {
-    const url = attachmentLinkInput.value;
-    if (url.match(/\.(jpeg|jpg|gif|png|webp)$/i) || url.startsWith('http')) {
-        imagePreview.src = url;
-        imagePreviewContainer.style.display = 'flex';
-    } else {
-        imagePreview.src = '#';
-        imagePreviewContainer.style.display = 'none';
-    }
-});
-
 removeImageButton.addEventListener('click', () => {
     attachmentFileInput.value = '';
     attachmentLinkInput.value = '';
@@ -1105,7 +1122,7 @@ taskForm.addEventListener('submit', async (e) => {
             if (uploadResult.status === 'success') {
                 finalAttachmentUrl = uploadResult.imageUrl;
             } else {
-                throw new Error(uploadResult.message || 'Failed to upload image.');
+                throw new Error('Failed to upload image.');
             }
         } else if (selectedAttachmentType === 'url' && attachmentLinkInput.value.trim() !== '') {
             finalAttachmentUrl = attachmentLinkInput.value.trim();
