@@ -129,7 +129,10 @@ function setTheme(themeName) {
     document.body.setAttribute('data-theme', themeName);
     
     document.querySelectorAll('.theme-option').forEach(btn => btn.classList.remove('active'));
-    document.querySelector(`.theme-option[data-theme="${themeName}"]`).classList.add('active');
+    const activeThemeBtn = document.querySelector(`.theme-option[data-theme="${themeName}"]`);
+    if (activeThemeBtn) {
+        activeThemeBtn.classList.add('active');
+    }
 }
 function loadTheme() {
     const savedTheme = localStorage.getItem(THEME_KEY) || 'light-mode';
@@ -176,14 +179,14 @@ async function fetchTasks() {
                 renderTasks();
                 return;
             }
-            throw new Error(`HTTP error! status: ${response.status}.`);
+            throw new Error(`HTTP error! status: ${response.status}. Response: ${responseText}`);
         }
         const result = await response.json();
         allTasks = result;
         
         renderTasks();
     } catch (error) {
-        showCustomAlert('Terjadi kesalahan saat mengambil data tugas. Silakan coba lagi. Detail: ' + error.message);
+        showCustomAlert('An error occurred while fetching task data. Please try again. Detail: ' + error.message);
     } finally {
         hideLoading();
     }
@@ -298,17 +301,17 @@ function renderTasks() {
         if (isTaskPinned && task.pinnedBy) {
             pinnedByHtml = `
             <div class="task-meta-item">
-                <i class="fas fa-user-tag"></i><span>Disematkan oleh ${task.pinnedBy}</span>
+                <i class="fas fa-user-tag"></i><span>Pinned by ${task.pinnedBy}</span>
             </div>
             `;
         }
-
+        
         let attachmentButtonHtml = '';
         if (task['Attachment Link']) {
             if (task['Attachment Link'].match(/\.(jpeg|jpg|gif|png|webp)$/i)) {
                 attachmentButtonHtml = `
                     <p class="task-details-text">
-                        <strong>Lampiran:</strong>
+                        <strong>Attachment:</strong>
                         <button class="task-btn view-attachment-button" data-type="image" data-link="${task['Attachment Link']}">
                            <i class="fas fa-image"></i>
                         </button>
@@ -316,7 +319,7 @@ function renderTasks() {
             } else if (task['Attachment Link'].startsWith('http')) {
                 attachmentButtonHtml = `
                     <p class="task-details-text">
-                        <strong>Lampiran:</strong>
+                        <strong>Attachment:</strong>
                         <a href="${task['Attachment Link']}" target="_blank" class="task-btn">
                             <i class="fas fa-external-link-alt"></i>
                         </a>
@@ -326,11 +329,9 @@ function renderTasks() {
         
         let detailsContent = '';
         if (task['Notes']) {
-            detailsContent += `<p class="task-details-text"><strong>Catatan:</strong> ${task['Notes']}</p>`;
+            detailsContent += `<p class="task-details-text"><strong>Notes:</strong> ${task['Notes']}</p>`;
         }
-        if (attachmentButtonHtml) {
-            detailsContent += attachmentButtonHtml;
-        }
+        detailsContent += attachmentButtonHtml; // Memindahkan tombol attachment ke dalam detail tugas
 
         taskItem.innerHTML = `
             <div class="task-header">
@@ -357,7 +358,7 @@ function renderTasks() {
             </div>
             <div class="task-details">
                 <div class="task-details-content">
-                    <p class="task-details-text"><strong>Aktivitas:</strong> ${task['Activity / Task'] || '-'}</p>
+                    <p class="task-details-text"><strong>Activity:</strong> ${task['Activity / Task'] || '-'}</p>
                     <p class="task-details-text"><strong>Platform:</strong> ${formatMultiSelectDisplay(task['Platform'])}</p>
                     <p class="task-details-text"><strong>Approval:</strong> <span class="status-badge ${getStatusBadgeClass(task['Approval Status'])}">${task['Approval Status'] || '-'}</span></p>
                     <p class="task-details-text"><strong>PIC:</strong> ${formatMultiSelectDisplay(task['PIC / Team'])}</p>
@@ -413,7 +414,7 @@ function showTaskForm(taskData = null) {
     taskFormSection.style.display = 'block';
 
     if (taskData) {
-        modalTitle.textContent = 'Edit Tugas';
+        modalTitle.textContent = 'Edit Task';
         taskIdInput.value = taskData['Task ID'];
         projectNameInput.value = taskData['Project Name'] || '';
         activityInput.value = taskData['Activity / Task'] || '';
@@ -473,7 +474,7 @@ function showTaskForm(taskData = null) {
         }
 
     } else {
-        modalTitle.textContent = 'Tambah Tugas Baru';
+        modalTitle.textContent = 'Add New Task';
         taskForm.reset();
         taskIdInput.value = '';
         projectNameInput.value = '';
@@ -506,7 +507,7 @@ function hideTaskForm() {
 }
 
 async function archiveTask(taskId) {
-    const isConfirmed = await showCustomConfirm('Apakah Anda yakin ingin mengarsipkan tugas ini?');
+    const isConfirmed = await showCustomConfirm('Are you sure you want to archive this task?');
     if (!isConfirmed) return;
 
     showLoading();
@@ -522,13 +523,13 @@ async function archiveTask(taskId) {
         }
         const result = await response.json();
         if (result.status === 'success') {
-            showCustomAlert('Tugas berhasil diarsipkan!');
+            showCustomAlert('Task archived successfully!');
             fetchTasks();
         } else {
-            showCustomAlert('Gagal mengarsipkan tugas: ' + result.message);
+            showCustomAlert('Failed to archive task: ' + result.message);
         }
     } catch (error) {
-        showCustomAlert('Terjadi kesalahan saat mengarsipkan tugas. Silakan coba lagi. Detail: ' + error.message);
+        showCustomAlert('An error occurred while archiving the task. Please try again. Detail: ' + error.message);
     } finally {
         hideLoading();
     }
@@ -548,14 +549,14 @@ async function restoreTask(taskId) {
         }
         const result = await response.json();
         if (result.status === 'success') {
-            showCustomAlert('Tugas berhasil dikembalikan!');
+            showCustomAlert('Task restored successfully!');
             fetchTasks(); 
             closeArchiveListModal();
         } else {
-            showCustomAlert('Gagal mengembalikan tugas: ' + result.message);
+            showCustomAlert('Failed to restore task: ' + result.message);
         }
     } catch (error) {
-        showCustomAlert('Terjadi kesalahan saat mengembalikan tugas. Silakan coba lagi. Detail: ' + error.message);
+        showCustomAlert('An error occurred while restoring the task. Please try again. Detail: ' + error.message);
     } finally {
         hideLoading();
     }
@@ -581,19 +582,19 @@ async function openArchiveListModal() {
             result.data.forEach(task => {
                 const li = document.createElement('li');
                 li.innerHTML = `
-                    <span>${task['Project Name'] || 'Proyek Tanpa Nama'} - ${task['Activity / Task'] || 'Tanpa Aktivitas'}</span>
-                    <button class="button secondary-button restore-button" data-task-id="${task['Task ID']}">Kembalikan</button>
+                    <span>${task['Project Name'] || 'Unnamed Project'} - ${task['Activity / Task'] || 'No Activity'}</span>
+                    <button class="button secondary-button restore-button" data-task-id="${task['Task ID']}">Restore</button>
                 `;
                 ul.appendChild(li);
                 li.querySelector('.restore-button').addEventListener('click', () => restoreTask(task['Task ID']));
             });
             archivedProjectsList.appendChild(ul);
         } else {
-            archivedProjectsList.innerHTML = '<p style="text-align: center; color: var(--color-text-secondary);">Tidak ada tugas yang diarsipkan.</p>';
+            archivedProjectsList.innerHTML = '<p style="text-align: center; color: var(--color-text-secondary);">No archived tasks found.</p>';
         }
         archiveListModal.classList.add('active');
     } catch (error) {
-        showCustomAlert('Gagal memuat daftar arsip. Silakan coba lagi. Detail: ' + error.message);
+        showCustomAlert('Failed to load archived tasks. Please try again. Detail: ' + error.message);
     } finally {
         hideLoading();
     }
@@ -611,15 +612,15 @@ async function generateDailyReportPdf() {
         const doc = new jsPDF('landscape');
 
         const today = new Date();
-        const formattedDate = today.toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
-        const reportTitle = `Laporan Tugas Harian - ${formattedDate}`;
+        const formattedDate = today.toLocaleDateString('en-US', { day: '2-digit', month: 'long', year: 'numeric' });
+        const reportTitle = `Daily Task Report - ${formattedDate}`;
 
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(22);
         doc.text(reportTitle, 10, 15);
         doc.setFontSize(11);
-        doc.text(`Dibuat oleh: ${currentLoggedInUser}`, 10, 22);
-        doc.text(`Tanggal Cetak: ${new Date().toLocaleString('id-ID')}`, 10, 27);
+        doc.text(`Generated by: ${currentLoggedInUser}`, 10, 22);
+        doc.text(`Print Date: ${new Date().toLocaleString('en-US')}`, 10, 27);
 
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(9);
@@ -631,10 +632,10 @@ async function generateDailyReportPdf() {
         );
 
         if (activeTasks.length === 0) {
-            doc.text('Tidak ada tugas aktif untuk dilaporkan hari ini.', 10, y + 10);
+            doc.text('No active tasks to report today.', 10, y + 10);
         } else {
             const columnHeaders = [
-                'Prioritas', 'Status', 'Batas Waktu', 'Proyek', 'Aktivitas', 'Platform', 'Approval', 'PIC / Tim', 'Lampiran'
+                'Priority', 'Status', 'Deadline', 'Project', 'Activity', 'Platform', 'Approval', 'PIC / Team', 'Attachment'
             ];
             const finalColumnWidths = [15, 30, 20, 40, 40, 30, 30, 20, 20];
 
@@ -744,14 +745,14 @@ async function generateDailyReportPdf() {
                     currentX += finalColumnWidths[i];
                 });
 
-                const attachmentColIndex = columnHeaders.indexOf('Lampiran');
+                const attachmentColIndex = columnHeaders.indexOf('Attachment');
                 const attachmentX = 10 + finalColumnWidths.slice(0, attachmentColIndex).reduce((sum, width) => sum + width, 0);
                 
                 if (img) {
                     const imageY = y + rowPadding + ((rowContentHeight - imageHeight) / 2);
                     doc.addImage(img, 'JPEG', attachmentX + 2, imageY, imageWidth, imageHeight);
                 } else if (attachmentLink.startsWith('http')) {
-                    const linkText = 'Lihat';
+                    const linkText = 'View';
                     doc.setTextColor(0, 0, 255);
                     const linkY = y + rowPadding + (rowContentHeight / 2);
                     doc.textWithLink(linkText, attachmentX + 2, linkY, { url: attachmentLink });
@@ -768,10 +769,10 @@ async function generateDailyReportPdf() {
         }
 
         doc.save(`Daily_Report_${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}.pdf`);
-        showCustomAlert('Laporan PDF berhasil dibuat!');
+        showCustomAlert('PDF report generated successfully!');
 
     } catch (error) {
-        showCustomAlert('Gagal membuat laporan PDF. Silakan coba lagi. Detail: ' + error.message);
+        showCustomAlert('Failed to generate PDF report. Please try again. Detail: ' + error.message);
     } finally {
         hideLoading();
     }
@@ -818,10 +819,10 @@ async function updateUserData(username, pin, firstLoginDone = null) {
             showCustomAlert(result.message);
             return true;
         } else {
-            throw new Error(result.message || 'Gagal memperbarui data pengguna.');
+            throw new Error(result.message || 'Failed to update user data.');
         }
     } catch (error) {
-        showCustomAlert('Terjadi kesalahan saat memperbarui PIN. Silakan coba lagi. Detail: ' + error.message);
+        showCustomAlert('An error occurred while updating the PIN. Please try again. Detail: ' + error.message);
         return false;
     } finally {
         hideLoading();
@@ -847,19 +848,19 @@ async function togglePinTask(taskId) {
             }
             const result = await response.json();
             if (result.status === 'success') {
-                showCustomAlert('Status pin tugas berhasil diperbarui!');
+                showCustomAlert('Task pin status updated successfully!');
                 currentTask.isPinned = isPinned;
                 currentTask.pinnedBy = isPinned ? currentLoggedInUser : null;
                 renderTasks();
             } else {
-                showCustomAlert('Gagal memperbarui status pin: ' + result.message);
+                showCustomAlert('Failed to update task pin status: ' + result.message);
             }
         } catch (error) {
-            showCustomAlert('Terjadi kesalahan saat memperbarui status pin. Silakan coba lagi. Detail: ' + error.message);
+            showCustomAlert('An error occurred while updating the task pin status. Please try again. Detail: ' + error.message);
         } finally {
-            hideLoading();
-        }
+        hideLoading();
     }
+}
 }
 
 
@@ -921,7 +922,7 @@ saveDashboardPinButton.addEventListener('click', async () => {
     dashboardPinErrorMessage.textContent = '';
 
     if (newPin && (newPin.length !== 4 || !/^\d+$/.test(newPin))) {
-        dashboardPinErrorMessage.textContent = 'PIN harus 4 digit angka, atau kosongkan untuk menghapus.';
+        dashboardPinErrorMessage.textContent = 'PIN must be 4 digits, or leave blank to remove.';
         return;
     }
     const pinToSave = newPin === '' ? null : newPin;
@@ -1104,7 +1105,7 @@ taskForm.addEventListener('submit', async (e) => {
             if (uploadResult.status === 'success') {
                 finalAttachmentUrl = uploadResult.imageUrl;
             } else {
-                throw new Error(uploadResult.message || 'Gagal mengunggah gambar.');
+                throw new Error(uploadResult.message || 'Failed to upload image.');
             }
         } else if (selectedAttachmentType === 'url' && attachmentLinkInput.value.trim() !== '') {
             finalAttachmentUrl = attachmentLinkInput.value.trim();
@@ -1133,7 +1134,7 @@ taskForm.addEventListener('submit', async (e) => {
         }
 
         if (!taskData['Activity / Task'] || !taskData['PIC / Team']) {
-            showCustomAlert('Aktivitas dan PIC / Tim harus diisi.');
+            showCustomAlert('Activity and PIC / Team must be filled in.');
             hideLoading();
             return;
         }
@@ -1152,14 +1153,14 @@ taskForm.addEventListener('submit', async (e) => {
         const result = await response.json();
 
         if (result.status === 'success') {
-            showCustomAlert('Tugas berhasil ' + (isEditing ? 'diperbarui' : 'ditambahkan') + '!');
+            showCustomAlert('Task saved successfully!');
             hideTaskForm();
             fetchTasks(); 
         } else {
-            showCustomAlert('Gagal ' + (isEditing ? 'memperbarui' : 'menambahkan') + ' tugas: ' + result.message);
+            showCustomAlert('Failed to save task: ' + result.message);
         }
     } catch (error) {
-        showCustomAlert('Terjadi kesalahan saat menyimpan tugas. Silakan coba lagi. Detail: ' + error.message);
+        showCustomAlert('An error occurred while saving the task. Please try again. Detail: ' + error.message);
     } finally {
         hideLoading();
     }
