@@ -85,62 +85,59 @@ body[data-theme="light-mode"] {
 }
 
 body[data-theme="dark-mode"] {
-    --theme-primary-color: #FF7B8A;
-    --theme-background-color: #1E1E1E;
-    --theme-container-background: #333333;
+    --theme-primary-color: #ff4d4d;
+    --theme-background-color: #1A1A1A;
+    --theme-container-background: #2A2A2A;
     --theme-text-color: #D0D0D0;
     --theme-border-color: #D0D0D0;
     --theme-shadow-color: #D0D0D0;
-    --theme-input-background: #333333;
-    --theme-settings-bg: #1E1E1E;
+    --theme-input-background: #3A3A3A;
+    --theme-settings-bg: #2A2A2A;
 }
 
-body[data-theme="lylac-mode"] {
-    --theme-primary-color: #B19CD9;
-    --theme-background-color: #F0E7F5;
-    --theme-container-background: #E5D9EF;
-    --theme-text-color: #584B66;
-    --theme-border-color: #584B66;
-    --theme-shadow-color: #584B66;
-    --theme-input-background: #FFFFFF;
-    --theme-settings-bg: #F0E7F5;
+body[data-theme="pink-mode"] {
+    --theme-primary-color: #C6A2FF;
+    --theme-background-color: #FEE8D6; /* Disesuaikan dengan palet baru */
+    --theme-container-background: #FFDAC1;
+    --theme-text-color: #333;
+    --theme-border-color: #4C423A;
+    --theme-shadow-color: #4C423A;
+    --theme-input-background: #ffffff;
+    --theme-settings-bg: #FEE8D6;
 }
 
 body[data-theme="blue-mode"] {
-    --theme-primary-color: #3498DB;
-    --theme-background-color: #EBF5FB;
-    --theme-container-background: #85C1E9;
-    --theme-text-color: #2C3E50;
-    --theme-border-color: #2C3E50;
-    --theme-shadow-color: #2C3E50;
-    --theme-input-background: #D6EAF8;
-    --theme-settings-bg: #EBF5FB;
+    --theme-primary-color: #A2D2FF;
+    --theme-background-color: #D3E0FF;
+    --theme-container-background: #ffffff;
+    --theme-text-color: #333;
+    --theme-border-color: #4C423A;
+    --theme-shadow-color: #4C423A;
+    --theme-input-background: #ffffff;
+    --theme-settings-bg: #D3E0FF;
 }
 
 body[data-theme="green-mode"] {
-    --theme-primary-color: #2ECC71;
-    --theme-background-color: #F0FFF4;
-    --theme-container-background: #A9DFBF;
-    --theme-text-color: #1D4E2F;
-    --theme-border-color: #1D4E2F;
-    --theme-shadow-color: #1D4E2F;
-    --theme-input-background: #E8F8F0;
-    --theme-settings-bg: #F0FFF4;
+    --theme-primary-color: #B5EAD7;
+    --theme-background-color: #E0F2E5;
+    --theme-container-background: #ffffff;
+    --theme-text-color: #333;
+    --theme-border-color: #4C423A;
+    --theme-shadow-color: #4C423A;
+    --theme-input-background: #ffffff;
+    --theme-settings-bg: #E0F2E5;
 }
 
 /* Kontainer utama */
 .container {
-    background-color: var(--theme-container-background);
-    padding: var(--gap);
-    border-radius: var(--radius);
+
     width: 100%;
     max-width: 900px;
     margin: 0 auto;
     flex-grow: 1;
     display: flex;
     flex-direction: column;
-    border: var(--border-width) solid var(--theme-border-color);
-    box-shadow: var(--color-shadow);
+
 }
 
 /* Dashboard Content */
@@ -276,7 +273,7 @@ body[data-theme="green-mode"] {
     align-items: center;
     justify-content: center;
     gap: 8px;
-    background-color: var(--theme-container-background);
+    background-color: var(--color-secondary);
     color: var(--theme-text-color);
 }
 
@@ -290,21 +287,21 @@ body[data-theme="green-mode"] {
 }
 
 .primary-button {
-    background-color: var(--theme-primary-color);
-    color: var(--theme-text-color);
+    background-color: var(--color-primary);
+    color: var(--color-dark);
 }
 
 .primary-button:hover {
-    filter: brightness(1.1);
+    background-color: #ff858e;
 }
 
 .secondary-button {
-    background-color: var(--color-secondary);
-    color: var(--theme-text-color);
+    background-color: var(--color-accent);
+    color: var(--color-dark);
 }
 
 .secondary-button:hover {
-    filter: brightness(1.1);
+    background-color: #ffc29b;
 }
 
 .success-button {
@@ -405,8 +402,8 @@ body[data-theme="green-mode"] {
 .user-avatar {
     width: 36px;
     height: 36px;
-    background-color: var(--theme-primary-color);
-    color: var(--theme-text-color);
+    background-color: var(--color-primary);
+    color: var(--color-dark);
     border-radius: 50%;
     display: flex;
     justify-content: center;
@@ -426,7 +423,7 @@ body[data-theme="green-mode"] {
     width: 36px;
     height: 36px;
     border-radius: var(--radius);
-    background-color: var(--theme-container-background);
+    background-color: var(--color-secondary);
     border: 2px solid var(--theme-border-color);
     color: var(--theme-text-color);
     display: flex;
@@ -439,8 +436,8 @@ body[data-theme="green-mode"] {
 
 .search-btn:hover, .hamburger-menu:hover,
 .filter-controls button.active {
-    background-color: var(--theme-primary-color);
-    color: var(--theme-text-color);
+    background-color: var(--color-primary);
+    color: var(--color-dark);
     box-shadow: var(--color-shadow);
     transform: translate(2px, 2px);
 }
@@ -521,7 +518,7 @@ body[data-theme="dark-mode"] .filter-controls button.active {
 }
 .filter-controls button {
     flex: 1;
-    background-color: var(--theme-container-background);
+    background-color: var(--color-accent);
     border: var(--border-width) solid var(--theme-border-color);
     padding: 0.6rem 0.5rem;
     font-size: 0.875em;
@@ -539,8 +536,8 @@ body[data-theme="dark-mode"] .filter-controls button.active {
 }
 .add-task-btn {
     flex: 1;
-    background-color: var(--theme-primary-color);
-    color: var(--theme-text-color);
+    background-color: var(--color-primary);
+    color: var(--color-dark);
     border: var(--border-width) solid var(--theme-border-color);
     padding: 0.6rem 0.5rem;
     font-size: 0.875em;
@@ -556,7 +553,7 @@ body[data-theme="dark-mode"] .filter-controls button.active {
     min-width: 100px;
 }
 .add-task-btn:hover {
-    filter: brightness(1.1);
+    background-color: #ff858e;
     transform: translate(2px, 2px);
     box-shadow: var(--color-shadow-hover);
 }
@@ -586,7 +583,7 @@ body[data-theme="dark-mode"] .filter-controls button.active {
     overflow: hidden;
 }
 .task-item.pinned {
-    border-left: 5px solid var(--theme-primary-color);
+    border-left: 5px solid var(--color-primary);
 }
 
 .task-header {
@@ -630,7 +627,7 @@ body[data-theme="dark-mode"] .filter-controls button.active {
     cursor: pointer;
     background-color: transparent;
     border: transparent;
-    color: var(--theme-text-color);
+    color: var(--color-dark);
     padding: 0.5rem;
     transition: color 0.2s ease;
     width: 25px;
@@ -672,12 +669,6 @@ body[data-theme="dark-mode"] .task-btn:hover {
     white-space: pre-wrap;
     word-break: break-word;
     margin: 0;
-}
-/* Perbaikan tata letak attachment link */
-.task-details-text.attachment-link {
-    display: flex;
-    align-items: center;
-    gap: 5px;
 }
 
 .task-meta-item {
@@ -862,9 +853,9 @@ body[data-theme="dark-mode"] .task-btn:hover {
 /* Definisi warna untuk tombol tema */
 .theme-option.theme-light { background-color: var(--color-light); }
 .theme-option.theme-dark { background-color: #1A1A1A; }
-.theme-option.theme-pink { background-color: #F0E7F5; } /* Diperbarui untuk mode Lylac */
-.theme-option.theme-blue { background-color: #D3E0FF; } /* Diperbarui untuk mode Blue */
-.theme-option.theme-green { background-color: #E0F2E5; } /* Diperbarui untuk mode Green */
+.theme-option.theme-pink { background-color: #FEE8D6; }
+.theme-option.theme-blue { background-color: #D3E0FF; }
+.theme-option.theme-green { background-color: #E0F2E5; }
 
 
 .theme-option.active::after {
@@ -1132,9 +1123,7 @@ footer {
         font-size: 2em;
     }
 
-    .container {
-        padding: 20px;
-    }
+
 
 
 
@@ -1191,9 +1180,7 @@ footer {
     body {
         padding: 10px;
     }
-    .container {
-        padding: 15px;
-    }
+
     .main-title {
         font-size: 1.8em;
     }
