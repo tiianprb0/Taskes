@@ -1,58 +1,48 @@
 /* File: public_html/w/work/style.css */
 /* Deskripsi: Styling utama untuk aplikasi Creative Team Task Tracker.
-   Menerapkan gaya Neobrutalism berdasarkan repositori dailish-raw. */
+   Diperbarui dengan gaya Neobrutalism berdasarkan referensi yang diberikan. */
 
-/* Variabel CSS Global (Diambil dari dailish-raw/dailish/css/base.css) */
+/* Variabel CSS Global untuk gaya Neobrutalism baru */
 :root {
-    --color-primary: #f06292; /* Soft, bold pink for default theme */
-    --color-dark: #4C423A; /* Dark brown for borders and text */
-    --color-text-main: #333;
-    --color-text-secondary: #5f5f5f;
-    --color-text-light: #767676;
-    --color-background-light: #f9f9f9;
-    --color-background-lighter: #efefef;
-    --color-background-lightest: #e9e9e9;
+    --color-primary: #FF9AA2;
+    --color-secondary: #B5EAD7;
+    --color-accent: #FFDAC1;
+    --color-dark: #6B6054;
+    --color-light: #F8F8F8;
     --color-white: #ffffff;
-    --color-border-light: #eee;
-    --color-border-medium: #ddd;
-    --color-hover-light: #f0f0f0;
-    --color-success: #28a745;
-    --color-error: #dc3545;
-    --color-accent-hover: #e81e63; /* Darker pink for hover */
-    --color-grey-button: #555;
-    --color-grey-button-hover: #777;
-    --color-e0e0e0: #e0e0e0;
-    --color-focus-border: #80bdff;
-    --color-focus-shadow: rgba(0, 123, 255, 0.25);
-    --color-dashed-line: #ccc;
-    --color-card-border: #6B6054;
+
+    --color-success: #4CAF50;
+    --color-error: #ff6b6b;
+    --color-info: #17a2b8;
+    --color-warning: #FFC107;
+
     --border-width: 4px;
+    --color-border-dark: #6B6054;
+    --color-border-light: #F8F8F8;
+    --color-dashed-line: #ccc;
+
     --color-shadow: 6px 6px 0px rgba(107, 96, 84, 0.3);
-    --color-shadow-card: 2px 2px 0px rgba(107, 96, 84, 0.3);
-    --color-shadow-hover: 1px 1px 0px rgba(107, 96, 84, 0.3);
+    --color-shadow-hover: 2px 2px 0px rgba(107, 96, 84, 0.3);
     --color-shadow-active: 0px 0px 0px rgba(107, 96, 84, 0.3);
-    --color-text-subtle: #888;
+    
     --radius: 12px;
+    --gap: 1.5rem;
 
     /* Tema Warna Dinamis */
     --theme-primary-color: var(--color-primary);
-    --theme-background-color: var(--color-background-light);
+    --theme-background-color: var(--color-light);
     --theme-container-background: var(--color-white);
-    --theme-text-color: var(--color-text-main);
+    --theme-text-color: var(--color-dark);
     --theme-border-color: var(--color-dark);
     --theme-shadow-color: var(--color-dark);
     --theme-input-background: var(--color-white);
-    --theme-settings-bg: var(--color-background-light);
-
-    /* Tema Pastel */
-    --color-lilac: #C6A2FF;
-    --color-blue-soft: #D3E0FF;
-    --color-green-soft: #E0F2E5;
+    --theme-settings-bg: var(--color-light);
 }
 
 /* Font Families */
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap');
+@import url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css");
 
 /* Simple CSS Reset */
 * {
@@ -65,14 +55,16 @@
 body {
     font-family: 'Plus Jakarta Sans', sans-serif;
     font-size: 1em;
-    line-height: 1.6;
+    line-height: 1.5;
     background-color: var(--theme-background-color);
+    background-image: radial-gradient(circle, rgba(107, 96, 84, 0.15) 1px, transparent 1px);
+    background-size: 12px 12px;
     color: var(--theme-text-color);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     min-height: 100vh;
-    padding: 20px;
+    padding: var(--gap);
     overflow-x: hidden;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -82,148 +74,64 @@ body {
 
 /* Definisi Tema Warna */
 body[data-theme="light-mode"] {
-    --theme-primary-color: #f06292;
-    --theme-background-color: #f9f9f9;
-    --theme-container-background: #ffffff;
-    --theme-text-color: #333;
-    --theme-border-color: #4C423A;
-    --theme-shadow-color: #4C423A;
-    --theme-input-background: #ffffff;
-    --theme-settings-bg: #f9f9f9;
+    --theme-primary-color: var(--color-primary);
+    --theme-background-color: var(--color-light);
+    --theme-container-background: var(--color-white);
+    --theme-text-color: var(--color-dark);
+    --theme-border-color: var(--color-dark);
+    --theme-shadow-color: var(--color-dark);
+    --theme-input-background: var(--color-white);
+    --theme-settings-bg: var(--color-light);
 }
 
 body[data-theme="dark-mode"] {
-    --theme-primary-color: #ff4d4d;
-    --theme-background-color: #1A1A1A;
-    --theme-container-background: #2A2A2A;
+    --theme-primary-color: #FF7B8A;
+    --theme-background-color: #1E1E1E;
+    --theme-container-background: #333333;
     --theme-text-color: #D0D0D0;
     --theme-border-color: #D0D0D0;
     --theme-shadow-color: #D0D0D0;
-    --theme-input-background: #3A3A3A;
-    --theme-settings-bg: #2A2A2A;
+    --theme-input-background: #333333;
+    --theme-settings-bg: #1E1E1E;
 }
 
-body[data-theme="pink-mode"] {
-    --theme-primary-color: var(--color-lilac);
-    --theme-background-color: var(--color-pink-soft);
-    --theme-container-background: #ffffff;
-    --theme-text-color: #333;
-    --theme-border-color: #4C423A;
-    --theme-shadow-color: #4C423A;
-    --theme-input-background: #ffffff;
-    --theme-settings-bg: var(--color-pink-soft);
+body[data-theme="lylac-mode"] {
+    --theme-primary-color: #B19CD9;
+    --theme-background-color: #F0E7F5;
+    --theme-container-background: #E5D9EF;
+    --theme-text-color: #584B66;
+    --theme-border-color: #584B66;
+    --theme-shadow-color: #584B66;
+    --theme-input-background: #FFFFFF;
+    --theme-settings-bg: #F0E7F5;
 }
 
 body[data-theme="blue-mode"] {
-    --theme-primary-color: #A2D2FF;
-    --theme-background-color: var(--color-blue-soft);
-    --theme-container-background: #ffffff;
-    --theme-text-color: #333;
-    --theme-border-color: #4C423A;
-    --theme-shadow-color: #4C423A;
-    --theme-input-background: #ffffff;
-    --theme-settings-bg: var(--color-blue-soft);
+    --theme-primary-color: #3498DB;
+    --theme-background-color: #EBF5FB;
+    --theme-container-background: #85C1E9;
+    --theme-text-color: #2C3E50;
+    --theme-border-color: #2C3E50;
+    --theme-shadow-color: #2C3E50;
+    --theme-input-background: #D6EAF8;
+    --theme-settings-bg: #EBF5FB;
 }
 
 body[data-theme="green-mode"] {
-    --theme-primary-color: #B5EAD7;
-    --theme-background-color: var(--color-green-soft);
-    --theme-container-background: #ffffff;
-    --theme-text-color: #333;
-    --theme-border-color: #4C423A;
-    --theme-shadow-color: #4C423A;
-    --theme-input-background: #ffffff;
-    --theme-settings-bg: var(--color-green-soft);
-}
-
-/* Dark Mode Overrides */
-body[data-theme="dark-mode"] .container,
-body[data-theme="dark-mode"] .login-box {
-    background-color: var(--theme-container-background);
-    border-color: var(--theme-border-color);
-    box-shadow: 4px 4px 0px var(--theme-shadow-color);
-}
-body[data-theme="dark-mode"] .input-field,
-body[data-theme="dark-mode"] .select-field,
-body[data-theme="dark-mode"] .textarea-field,
-body[data-theme="dark-mode"] .sort-select {
-    background-color: var(--theme-input-background);
-    border-color: var(--theme-border-color);
-    color: var(--theme-text-color);
-    box-shadow: 2px 2px 0px var(--theme-shadow-color);
-}
-body[data-theme="dark-mode"] .input-field:focus,
-body[data-theme="dark-mode"] .select-field:focus,
-body[data-theme="dark-mode"] .textarea-field:focus {
-    border-color: var(--theme-primary-color);
-    box-shadow: 3px 3px 0px var(--theme-primary-color);
-}
-body[data-theme="dark-mode"] .button,
-body[data-theme="dark-mode"] .secondary-button,
-body[data-theme="dark-mode"] .add-task-btn,
-body[data-theme="dark-mode"] .info-button,
-body[data-theme="dark-mode"] .task-btn,
-body[data-theme="dark-mode"] .settings-btn {
-    border-color: var(--theme-border-color);
-    box-shadow: 2px 2px 0px var(--theme-shadow-color);
-    color: var(--theme-text-color);
-    background-color: var(--theme-input-background);
-}
-body[data-theme="dark-mode"] .primary-button {
-    background-color: var(--theme-primary-color);
-    color: var(--theme-text-color);
-}
-body[data-theme="dark-mode"] .primary-button:hover,
-body[data-theme="dark-mode"] .add-task-btn:hover {
-    background-color: var(--theme-primary-color);
-    color: var(--theme-container-background);
-}
-body[data-theme="dark-mode"] .task-btn,
-body[data-theme="dark-mode"] .close-button,
-body[data-theme="dark-mode"] .task-title,
-body[data-theme="dark-mode"] .settings-btn,
-body[data-theme="dark-mode"] .task-meta-item i,
-body[data-theme="dark-mode"] .task-meta-item span {
-    color: var(--theme-text-color);
-}
-body[data-theme="dark-mode"] .status-badge {
-    color: var(--theme-text-color);
-}
-body[data-theme="dark-mode"] .priority-text-badge {
-    border-color: var(--theme-border-color);
-    box-shadow: 1px 1px 0px var(--theme-shadow-color);
-    color: var(--theme-text-color);
-}
-body[data-theme="dark-mode"] .priority-text-badge.high { background-color: var(--color-error); color: var(--color-white); }
-body[data-theme="dark-mode"] .priority-text-badge.medium { background-color: #ffc107; color: var(--color-dark); }
-body[data-theme="dark-mode"] .priority-text-badge.low { background-color: var(--color-success); color: var(--color-white); }
-body[data-theme="dark-mode"] .filter-controls button {
-    background-color: var(--theme-container-background);
-    color: var(--theme-text-color);
-}
-body[data-theme="dark-mode"] .filter-controls button.active {
-    background-color: var(--theme-primary-color);
-    color: var(--theme-background-color);
-}
-body[data-theme="dark-mode"] .header .search-btn,
-body[data-theme="dark-mode"] .header .hamburger-menu {
-    background-color: var(--theme-primary-color);
-    border-color: var(--theme-border-color);
-    color: var(--theme-text-color);
-    box-shadow: 2px 2px 0 var(--theme-shadow-color);
-}
-body[data-theme="dark-mode"] .task-details-content {
-    border-top-color: var(--theme-border-color);
-}
-body[data-theme="dark-mode"] .settings-panel {
-    background-color: var(--theme-settings-bg);
-    border-left-color: var(--theme-border-color);
+    --theme-primary-color: #2ECC71;
+    --theme-background-color: #F0FFF4;
+    --theme-container-background: #A9DFBF;
+    --theme-text-color: #1D4E2F;
+    --theme-border-color: #1D4E2F;
+    --theme-shadow-color: #1D4E2F;
+    --theme-input-background: #E8F8F0;
+    --theme-settings-bg: #F0FFF4;
 }
 
 /* Kontainer utama */
 .container {
     background-color: var(--theme-container-background);
-    padding: 30px;
+    padding: var(--gap);
     border-radius: var(--radius);
     width: 100%;
     max-width: 900px;
@@ -231,6 +139,8 @@ body[data-theme="dark-mode"] .settings-panel {
     flex-grow: 1;
     display: flex;
     flex-direction: column;
+    border: var(--border-width) solid var(--theme-border-color);
+    box-shadow: var(--color-shadow);
 }
 
 /* Dashboard Content */
@@ -242,17 +152,17 @@ body[data-theme="dark-mode"] .settings-panel {
 
 .main-title {
     font-family: 'Playfair Display', serif;
-    font-size: 25px;
+    font-size: 2.5rem;
     color: var(--theme-border-color);
-    margin-bottom: 30px;
-    text-align: left;
+    margin-bottom: var(--gap);
+    text-align: center;
 }
 
 /* --- Styling untuk Halaman Login --- */
 .login-box {
     max-width: 400px;
     margin: 40px auto;
-    padding: 30px;
+    padding: var(--gap);
     background-color: var(--theme-container-background);
     border: var(--border-width) solid var(--theme-border-color);
     border-radius: var(--radius);
@@ -261,9 +171,10 @@ body[data-theme="dark-mode"] .settings-panel {
 
 .login-box h2 {
     font-family: 'Playfair Display', serif;
-    font-size: 1.8em;
+    font-size: 2rem;
     color: var(--theme-border-color);
     margin-bottom: 25px;
+    text-align: center;
 }
 
 .form-group {
@@ -293,14 +204,14 @@ body[data-theme="dark-mode"] .settings-panel {
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
     min-width: 150px;
     outline: none;
-    box-shadow: 2px 2px 0px var(--theme-shadow-color);
+    box-shadow: var(--color-shadow-hover);
 }
 
 .input-field:focus,
 .select-field:focus,
 .textarea-field:focus {
     border-color: var(--theme-primary-color);
-    box-shadow: 3px 3px 0px var(--theme-primary-color);
+    box-shadow: var(--color-shadow);
 }
 
 .textarea-field {
@@ -314,7 +225,7 @@ body[data-theme="dark-mode"] .settings-panel {
     -webkit-appearance: none;
     appearance: none;
     height: 8px;
-    background: var(--color-border-medium);
+    background: var(--color-border-light);
     outline: none;
     border-radius: 4px;
     transition: opacity .2s;
@@ -365,29 +276,35 @@ body[data-theme="dark-mode"] .settings-panel {
     align-items: center;
     justify-content: center;
     gap: 8px;
+    background-color: var(--theme-container-background);
+    color: var(--theme-text-color);
 }
 
 .button:active {
+    transform: translate(4px, 4px);
+    box-shadow: var(--color-shadow-active);
+}
+.button:hover {
     transform: translate(2px, 2px);
     box-shadow: var(--color-shadow-hover);
 }
 
 .primary-button {
     background-color: var(--theme-primary-color);
-    color: var(--color-white);
+    color: var(--theme-text-color);
 }
 
 .primary-button:hover {
-    background-color: var(--color-accent-hover);
+    filter: brightness(1.1);
 }
 
 .secondary-button {
-    background-color: var(--color-background-lighter);
+    background-color: var(--color-secondary);
     color: var(--theme-text-color);
 }
 
 .secondary-button:hover {
-    background-color: var(--color-hover-light);
+    filter: brightness(1.1);
 }
 
 .success-button {
@@ -396,7 +313,7 @@ body[data-theme="dark-mode"] .settings-panel {
 }
 
 .success-button:hover {
-    background-color: #218838;
+    background-color: #43a047;
 }
 
 .danger-button {
@@ -405,14 +322,14 @@ body[data-theme="dark-mode"] .settings-panel {
 }
 
 .danger-button:hover {
-    background-color: #c82333;
+    background-color: #e55a5a;
 }
 
 .info-button {
-    background-color: #17a2b8;
+    background-color: var(--color-info);
     color: var(--color-white);
     border: var(--border-width) solid var(--theme-border-color);
-    box-shadow: 3px 3px 0px var(--theme-shadow-color);
+    box-shadow: var(--color-shadow);
     padding: 8px 12px;
     border-radius: 6px;
     font-weight: 700;
@@ -424,19 +341,19 @@ body[data-theme="dark-mode"] .settings-panel {
 }
 
 .info-button:hover {
-    background-color: #138496;
-    transform: translateY(-1px);
-    box-shadow: 2px 2px 0px var(--theme-shadow-color);
+    background-color: #1593a6;
+    transform: translate(2px, 2px);
+    box-shadow: var(--color-shadow-hover);
 }
 .info-button:active {
-    transform: translate(1px, 1px);
-    box-shadow: 1px 1px 0px var(--theme-shadow-color);
+    transform: translate(4px, 4px);
+    box-shadow: var(--color-shadow-active);
 }
 
 .restore-button {
     padding: 6px 12px;
     font-size: 0.9em;
-    box-shadow: 2px 2px 0px var(--theme-shadow-color);
+    box-shadow: var(--color-shadow-hover);
 }
 
 
@@ -454,7 +371,7 @@ body[data-theme="dark-mode"] .settings-panel {
     border: var(--border-width) solid var(--theme-border-color);
     border-radius: var(--radius);
     box-shadow: var(--color-shadow);
-    padding: 30px;
+    padding: var(--gap);
     width: 100%;
     max-width: 600px;
     margin: 0 auto;
@@ -463,7 +380,7 @@ body[data-theme="dark-mode"] .settings-panel {
 
 .form-section-title {
     font-family: 'Playfair Display', serif;
-    font-size: 1.6em;
+    font-size: 2rem;
     color: var(--theme-border-color);
     margin-bottom: 25px;
     text-align: center;
@@ -475,7 +392,6 @@ body[data-theme="dark-mode"] .settings-panel {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 20px;
-    /* Menghilangkan border-bottom */
     padding-bottom: 10px;
 }
 
@@ -489,15 +405,15 @@ body[data-theme="dark-mode"] .settings-panel {
 .user-avatar {
     width: 36px;
     height: 36px;
-    background-color: var(--theme-border-color);
-    color: var(--theme-container-background);
+    background-color: var(--theme-primary-color);
+    color: var(--theme-text-color);
     border-radius: 50%;
     display: flex;
     justify-content: center;
     align-items: center;
     font-size: 1rem;
     font-weight: 700;
-    box-shadow: 2px 2px 0 var(--theme-border-color);
+    box-shadow: var(--color-shadow-hover);
     border: 2px solid var(--theme-border-color);
 }
 
@@ -510,23 +426,23 @@ body[data-theme="dark-mode"] .settings-panel {
     width: 36px;
     height: 36px;
     border-radius: var(--radius);
-    background-color: var(--theme-input-background);
+    background-color: var(--theme-container-background);
     border: 2px solid var(--theme-border-color);
-    color: var(--theme-border-color);
+    color: var(--theme-text-color);
     display: flex;
     justify-content: center;
     align-items: center;
     cursor: pointer;
-    box-shadow: 2px 2px 0 var(--theme-border-color);
+    box-shadow: var(--color-shadow-hover);
     transition: all 0.2s ease;
 }
 
 .search-btn:hover, .hamburger-menu:hover,
 .filter-controls button.active {
     background-color: var(--theme-primary-color);
-    color: var(--theme-container-background);
-    box-shadow: 1px 1px 0 var(--theme-border-color);
-    transform: translate(1px, 1px);
+    color: var(--theme-text-color);
+    box-shadow: var(--color-shadow);
+    transform: translate(2px, 2px);
 }
 body[data-theme="dark-mode"] .search-btn:hover,
 body[data-theme="dark-mode"] .hamburger-menu:hover,
@@ -558,7 +474,7 @@ body[data-theme="dark-mode"] .filter-controls button.active {
     font-weight: 600;
     color: var(--theme-text-color);
     background-color: var(--theme-input-background);
-    box-shadow: 2px 2px 0px var(--theme-shadow-color);
+    box-shadow: var(--color-shadow-hover);
     cursor: pointer;
     appearance: none;
     background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2212%22%20height%3D%228%22%20viewBox%3D%220%200%2012%208%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cpath%20d%3D%22M1%201L6%206L11%201%22%20stroke%3D%22%236B6054%22%20stroke-width%3D%222%22%2F%3E%3C%2Fsvg%3E');
@@ -580,18 +496,18 @@ body[data-theme="dark-mode"] .filter-controls button.active {
     width: 100%;
     padding: 10px 15px;
     border: 2px solid var(--theme-border-color);
-    background-color: var(--color-background-lighter);
+    background-color: var(--theme-input-background);
     border-radius: 4px;
     font-family: 'Plus Jakarta Sans', sans-serif;
     font-size: 1em;
     color: var(--theme-text-color);
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
-    box-shadow: 2px 2px 0px var(--theme-shadow-color);
+    box-shadow: var(--color-shadow-hover);
     outline: none;
 }
 .search-input:focus {
     border-color: var(--theme-primary-color);
-    box-shadow: 3px 3px 0px var(--theme-primary-color);
+    box-shadow: var(--color-shadow);
 }
 
 
@@ -612,25 +528,25 @@ body[data-theme="dark-mode"] .filter-controls button.active {
     font-weight: 600;
     color: var(--theme-text-color);
     cursor: pointer;
-    box-shadow: 2px 2px 0px var(--theme-shadow-color);
+    box-shadow: var(--color-shadow-hover);
     transition: all 0.2s ease;
     border-radius: var(--radius);
     min-width: 70px;
 }
 .filter-controls button:hover {
-    transform: translate(1px, 1px);
-    box-shadow: 1px 1px 0px var(--theme-shadow-color);
+    transform: translate(2px, 2px);
+    box-shadow: var(--color-shadow-hover);
 }
 .add-task-btn {
     flex: 1;
     background-color: var(--theme-primary-color);
-    color: var(--color-white);
+    color: var(--theme-text-color);
     border: var(--border-width) solid var(--theme-border-color);
     padding: 0.6rem 0.5rem;
     font-size: 0.875em;
     font-weight: 700;
     cursor: pointer;
-    box-shadow: 2px 2px 0px var(--theme-shadow-color);
+    box-shadow: var(--color-shadow);
     transition: all 0.2s ease;
     border-radius: var(--radius);
     display: flex;
@@ -640,13 +556,13 @@ body[data-theme="dark-mode"] .filter-controls button.active {
     min-width: 100px;
 }
 .add-task-btn:hover {
-    background-color: var(--color-accent-hover);
-    transform: translate(1px, 1px);
-    box-shadow: 1px 1px 0px var(--theme-shadow-color);
+    filter: brightness(1.1);
+    transform: translate(2px, 2px);
+    box-shadow: var(--color-shadow-hover);
 }
 .add-task-btn:active {
-    transform: translate(2px, 2px);
-    box-shadow: 1px 1px 0px var(--theme-shadow-color);
+    transform: translate(4px, 4px);
+    box-shadow: var(--color-shadow-active);
 }
 
 
@@ -657,11 +573,11 @@ body[data-theme="dark-mode"] .filter-controls button.active {
     margin: 0;
     display: flex;
     flex-direction: column;
-    gap: 1.25rem;
+    gap: var(--gap);
 }
 .task-item {
     background-color: var(--theme-container-background);
-    padding: 1.25rem;
+    padding: var(--gap);
     border: var(--border-width) solid var(--theme-border-color);
     box-shadow: var(--color-shadow);
     border-radius: var(--radius);
@@ -670,7 +586,7 @@ body[data-theme="dark-mode"] .filter-controls button.active {
     overflow: hidden;
 }
 .task-item.pinned {
-    border-left: 5px solid #FFD700;
+    border-left: 5px solid var(--theme-primary-color);
 }
 
 .task-header {
@@ -714,7 +630,7 @@ body[data-theme="dark-mode"] .filter-controls button.active {
     cursor: pointer;
     background-color: transparent;
     border: transparent;
-    color: var(--color-text-secondary);
+    color: var(--theme-text-color);
     padding: 0.5rem;
     transition: color 0.2s ease;
     width: 25px;
@@ -725,7 +641,7 @@ body[data-theme="dark-mode"] .filter-controls button.active {
 }
 .task-btn:hover {
     color: var(--theme-primary-color);
-    box-shadow: 1px 1px 0 var(--theme-border-color);
+    box-shadow: var(--color-shadow-hover);
     transform: translate(1px, 1px);
 }
 body[data-theme="dark-mode"] .task-btn:hover {
@@ -756,6 +672,12 @@ body[data-theme="dark-mode"] .task-btn:hover {
     white-space: pre-wrap;
     word-break: break-word;
     margin: 0;
+}
+/* Perbaikan tata letak attachment link */
+.task-details-text.attachment-link {
+    display: flex;
+    align-items: center;
+    gap: 5px;
 }
 
 .task-meta-item {
@@ -801,10 +723,12 @@ body[data-theme="dark-mode"] .task-btn:hover {
     font-weight: 700;
     text-transform: uppercase;
     text-align: center;
+    border: 2px solid var(--theme-border-color);
+    box-shadow: var(--color-shadow-hover);
 }
 .priority-text-badge.high { background-color: var(--color-error); color: var(--color-white); }
-.priority-text-badge.medium { background-color: #ffc107; color: var(--color-dark); }
-.priority-text-badge.low { background-color: var(--color-success); color: var(--color-white); }
+.priority-text-badge.medium { background-color: var(--color-warning); color: var(--color-dark); }
+.priority-text-badge.low { background-color: var(--color-secondary); color: var(--color-dark); }
 
 
 /* NEW: Empty State (dari dailish) */
@@ -840,12 +764,12 @@ body[data-theme="dark-mode"] .task-btn:hover {
     width: 300px;
     height: 100vh;
     background-color: var(--theme-settings-bg);
-    border-left: 2px solid var(--theme-border-color);
+    border-left: var(--border-width) solid var(--theme-border-color);
     box-shadow: -4px 0 10px rgba(0,0,0,0.1);
     transform: translateX(100%);
     transition: transform 0.3s ease-in-out;
     z-index: 9999;
-    padding: 20px;
+    padding: var(--gap);
     display: flex;
     flex-direction: column;
 }
@@ -868,7 +792,7 @@ body[data-theme="dark-mode"] .task-btn:hover {
     border: none;
     font-size: 1.5rem;
     cursor: pointer;
-    color: var(--color-text-secondary);
+    color: var(--color-dark);
 }
 .close-settings:hover {
     color: var(--theme-border-color);
@@ -889,10 +813,10 @@ body[data-theme="dark-mode"] .task-btn:hover {
     width: 100%;
     text-align: left;
     padding: 12px 15px;
-    border: 2px solid var(--theme-border-color);
+    border: var(--border-width) solid var(--theme-border-color);
     background-color: var(--theme-container-background);
     border-radius: var(--radius);
-    box-shadow: 2px 2px 0 var(--theme-border-color);
+    box-shadow: var(--color-shadow-hover);
     font-family: 'Plus Jakarta Sans', sans-serif;
     font-size: 1em;
     font-weight: 500;
@@ -906,9 +830,9 @@ body[data-theme="dark-mode"] .task-btn:hover {
     text-decoration: none;
 }
 .settings-btn:hover {
-    transform: translate(1px, 1px);
-    box-shadow: 1px 1px 0 var(--theme-border-color);
-    background-color: var(--color-background-lighter);
+    transform: translate(2px, 2px);
+    box-shadow: var(--color-shadow-hover);
+    background-color: var(--color-secondary);
 }
 .settings-btn i {
     width: 20px;
@@ -923,8 +847,8 @@ body[data-theme="dark-mode"] .task-btn:hover {
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    border: 2px solid var(--theme-border-color);
-    box-shadow: 2px 2px 0 var(--theme-border-color);
+    border: var(--border-width) solid var(--theme-border-color);
+    box-shadow: var(--color-shadow-hover);
     cursor: pointer;
     display: flex;
     justify-content: center;
@@ -936,11 +860,11 @@ body[data-theme="dark-mode"] .task-btn:hover {
 }
 
 /* Definisi warna untuk tombol tema */
-.theme-option.theme-light { background-color: var(--color-white); }
-.theme-option.theme-dark { background-color: var(--dark-color-bg); }
-.theme-option.theme-lilac { background-color: #C6A2FF; }
-.theme-option.theme-blue { background-color: #A2D2FF; }
-.theme-option.theme-green { background-color: #B5EAD7; }
+.theme-option.theme-light { background-color: var(--color-light); }
+.theme-option.theme-dark { background-color: #1A1A1A; }
+.theme-option.theme-pink { background-color: #F0E7F5; } /* Diperbarui untuk mode Lylac */
+.theme-option.theme-blue { background-color: #D3E0FF; } /* Diperbarui untuk mode Blue */
+.theme-option.theme-green { background-color: #E0F2E5; } /* Diperbarui untuk mode Green */
 
 
 .theme-option.active::after {
@@ -955,7 +879,7 @@ body[data-theme="dark-mode"] .task-btn:hover {
     font-size: 1rem;
 }
 .theme-option:hover {
-    box-shadow: 1px 1px 0 var(--theme-border-color);
+    box-shadow: var(--color-shadow-hover);
     transform: translate(1px, 1px);
 }
 
@@ -966,7 +890,7 @@ body[data-theme="dark-mode"] .task-btn:hover {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.6);
+    background-color: rgba(0, 0, 0, 0.5);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -983,9 +907,9 @@ body[data-theme="dark-mode"] .task-btn:hover {
 
 .modal-content {
     background-color: var(--theme-container-background);
-    padding: 30px;
-    border-radius: 10px;
-    border: 2px solid var(--theme-border-color);
+    padding: var(--gap);
+    border-radius: var(--radius);
+    border: var(--border-width) solid var(--theme-border-color);
     box-shadow: var(--color-shadow);
     width: 90%;
     max-width: 600px;
@@ -1001,7 +925,7 @@ body[data-theme="dark-mode"] .task-btn:hover {
     background-color: var(--theme-border-color);
     padding: 20px;
     border-radius: 10px;
-    border: 2px solid var(--color-white);
+    border: var(--border-width) solid var(--color-white);
     box-shadow: var(--color-shadow);
     width: 95%;
     max-width: 800px;
@@ -1046,7 +970,7 @@ body[data-theme="dark-mode"] .task-btn:hover {
     background: none;
     border: none;
     font-size: 1.8em;
-    color: var(--color-text-secondary);
+    color: var(--color-dark);
     cursor: pointer;
     line-height: 1;
     padding: 5px;
@@ -1172,7 +1096,7 @@ footer {
     width: 150px;
     height: 150px;
     border: 2px solid var(--theme-border-color);
-    box-shadow: 3px 3px 0px var(--theme-shadow-color);
+    box-shadow: var(--color-shadow-hover);
     margin-top: 15px;
     border-radius: 8px;
     overflow: hidden;
@@ -1312,54 +1236,4 @@ footer {
         opacity: 1;
         transform: translateY(0);
     }
-}
-
-/* ==================================== */
-/* Perbaikan UI berdasarkan laporan bug */
-/* ==================================== */
-
-/* Mengatasi tumpang tindih tema di header */
-.header .theme-options {
-    position: relative;
-    top: auto;
-    left: auto;
-    transform: none;
-    display: flex;
-}
-
-/* Mengatur ulang layout settings-panel */
-.settings-panel {
-    z-index: 10000; /* Pastikan di atas elemen lain */
-    display: flex;
-    flex-direction: column;
-    padding-bottom: 20px;
-    overflow-y: auto; /* Memungkinkan scrolling jika konten terlalu panjang */
-    background-color: var(--theme-container-background); /* Menggunakan warna yang jelas */
-}
-
-/* Mengatasi masalah tombol tema di dalam settings panel */
-.settings-panel .theme-options {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-bottom: 0;
-}
-
-/* Menambahkan style untuk tombol lampiran agar selalu terlihat di header tugas */
-.task-actions .view-attachment-button {
-    color: var(--color-text-secondary);
-    transition: color 0.2s ease;
-    font-size: 1rem;
-    background-color: transparent;
-    border: none;
-    padding: 0;
-    width: 25px;
-    height: 25px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.task-actions .view-attachment-button:hover {
-    color: var(--theme-primary-color);
 }
