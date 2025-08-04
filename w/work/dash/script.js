@@ -324,20 +324,20 @@ function renderTasks() {
             if (task['Attachment Link']) {
                 if (task['Attachment Link'].match(/\.(jpeg|jpg|gif|png|webp)$/i)) {
                     attachmentButtonHtml = `
-                        <p class="task-details-text">
+                        <div class="task-details-attachment-container">
                             <strong>Attachment:</strong>
-                            <button class="task-btn view-attachment-button" data-type="image" data-link="${task['Attachment Link']}">
-                               <i class="fas fa-image"></i>
+                            <button class="attachment-btn" data-type="image" data-link="${task['Attachment Link']}">
+                               <i class="fas fa-image"></i> View
                             </button>
-                        </p>`;
+                        </div>`;
                 } else if (task['Attachment Link'].startsWith('http')) {
                     attachmentButtonHtml = `
-                        <p class="task-details-text">
+                        <div class="task-details-attachment-container">
                             <strong>Attachment:</strong>
-                            <a href="${task['Attachment Link']}" target="_blank" class="task-btn">
-                                <i class="fas fa-external-link-alt"></i>
+                            <a href="${task['Attachment Link']}" target="_blank" class="attachment-btn">
+                                <i class="fas fa-external-link-alt"></i> View
                             </a>
-                        </p>`;
+                        </div>`;
                 }
             }
             
@@ -397,11 +397,12 @@ function renderTasks() {
                 e.stopPropagation();
                 togglePinTask(task['Task ID']);
             });
-            const viewButton = taskItem.querySelector('.view-attachment-button');
+            // Memastikan event listener terpasang ke kelas yang baru
+            const viewButton = taskItem.querySelector('.attachment-btn');
             if (viewButton) {
                 viewButton.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    const link = e.target.dataset.link || e.target.closest('button').dataset.link;
+                    const link = e.target.dataset.link || e.target.closest('button').dataset.link || e.target.closest('a').href;
                     if (link) {
                         imagePopupImage.src = link;
                         imagePopupModal.classList.add('active');
