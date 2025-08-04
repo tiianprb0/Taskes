@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalender Manajemen Konten</title>
+    <!-- Memuat Tailwind CSS untuk styling yang responsif -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Memuat ikon Lucide React yang modern -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Memuat jsPDF untuk fungsionalitas PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- Memuat Font Awesome untuk ikon loading -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <!-- Menggunakan font Plus Jakarta Sans yang sudah disediakan -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+        :root {
+            --primary: #FF9AA2;
+            --secondary: #B5EAD7;
+            --accent: #FFDAC1;
+            --dark: #6B6054;
+            --light: #F8F8F8;
+            --border: 4px solid var(--dark);
+            --shadow: 6px 6px 0px rgba(107, 96, 84, 0.3);
+            --radius: 12px;
+            --gap: 1.5rem;
+            --font-base: 1rem;
+            --font-lg: 2.5rem;
+            --font-sm: 0.875rem;
+            --font-xs: 0.75rem;
+            --icon-highlight: #FF6B6B;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--light);
+            background-image: radial-gradient(circle, rgba(107, 96, 84, 0.15) 1px, transparent 1px);
+            background-size: 12px 12px;
+            color: var(--dark);
+            min-height: 100vh;
+        }
+
+        .border-neobrutal {
+            border: var(--border);
+        }
+
+        .shadow-neobrutal {
+            box-shadow: var(--shadow);
+        }
+        
+        .btn-neobrutal {
+            background-color: var(--primary); /* Pink */
+            border: var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            transition: all 0.2s ease;
+        }
+
+        .btn-neobrutal:hover {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0px var(--dark);
+        }
+        
+        .btn-toggle {
+            background-color: var(--accent);
+            color: var(--dark);
+        }
+
+        .btn-toggle.active {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .calendar-grid-container {
+            display: grid;
+            grid-template-columns: repeat(7, minmax(0, 1fr));
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .day-header {
+            text-align: center;
+            background-color: var(--accent);
+            padding: 8px;
+            font-weight: 700;
+            border: var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+        }
+
+        .day-cell {
+            position: relative;
+            cursor: pointer;
+            border: 2px solid var(--dark);
+            border-radius: var(--radius);
+            padding: 8px;
+            text-align: center;
+            background-color: #fff;
+            box-shadow: var(--shadow);
+            transition: all 0.2s ease;
+            height: 120px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+        }
+        
+        .day-cell.weekly {
+            height: 200px;
+        }
+
+        .day-cell:hover {
+            background-color: #FFE5F0;
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0px var(--dark);
+        }
+
+        .day-number {
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+
+        .event-strip-container {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            width: 100%;
+            margin-top: auto;
+        }
+
+        .event-strip {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            border: 1px solid var(--dark);
+        }
+        .event-strip-ewb { background-color: #FF5722; }
+        .event-strip-gehs { background-color: #03A9F4; }
+        .event-strip-egac { background-color: #E91E63; }
+        .event-strip-eh { background-color: #8BC34A; }
+        .event-strip-skae { background-color: #673AB7; }
+        .event-strip-eskafe { background-color: #FFC107; }
+
+        .modal-content {
+            background-color: white;
+            border: var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+        }
+        
+        input, select, textarea {
+            border: none;
+            border-bottom: 2px dashed var(--dark);
+            background-color: transparent;
+            color: var(--dark);
+            padding: 8px;
+            box-shadow: none;
+            border-radius: 0;
+            width: 100%;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            box-shadow: 0 2px 0px var(--primary);
+        }
+
+        .read-only-section {
+            background-color: var(--light);
+            border: var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 16px;
+        }
+
+        .comment-item {
+            background-color: var(--light);
+            border: var(--border);
+            border-radius: var(--radius);
+            padding: 12px;
+        }
+
+        .list-item-btn {
+            background-color: var(--primary);
+            border: var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            transition: all 0.2s ease;
+        }
+        .list-item-btn:hover {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0px var(--dark);
+        }
+        
+        .link-neobrutal {
+            color: var(--primary);
+            text-decoration: underline;
+            font-weight: bold;
+        }
+        .link-neobrutal:hover {
+            color: #E250A4;
+        }
+        
+        .main-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        .main-header .left-side {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .main-header .right-side {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        @media (max-width: 768px) {
+            .main-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .main-header .right-side {
+                width: 100%;
+                justify-content: space-between;
+            }
+        }
+
+        /* Loading Overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1001;
+            font-size: 1.5em;
+            color: var(--primary);
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .loading-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+    </style>
+</head>
+<body class="p-4">
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay">
+        <i class="fas fa-spinner fa-spin fa-3x"></i>
+    </div>
+    
+    <!-- Kontainer utama kalender -->
+    <div class="border-neobrutal shadow-neobrutal w-full max-w-3xl p-6 mx-auto mb-4 bg-white rounded-[var(--radius)]">
+        
+        <div class="main-header">
+            <h1 class="text-3xl font-black">Calender Content</h1>
+        </div>
+
+        <div class="flex items-center justify-between mb-4 mt-8">
+            <button id="prev-btn" class="btn-neobrutal p-2">
+                <i data-lucide="chevron-left" class="h-6 w-6"></i>
+            </button>
+            <div class="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0 md:space-x-4">
+                <h2 id="view-display" class="text-xl font-bold"></h2>
+                <div class="flex space-x-2">
+                    <button id="view-monthly" class="btn-neobrutal py-2 px-4 font-bold text-sm btn-toggle active">Bulanan</button>
+                    <button id="view-weekly" class="btn-neobrutal py-2 px-4 font-bold text-sm btn-toggle">Mingguan</button>
+                </div>
+            </div>
+            <button id="next-btn" class="btn-neobrutal p-2">
+                <i data-lucide="chevron-right" class="h-6 w-6"></i>
+            </button>
+        </div>
+
+        <div class="calendar-grid-container">
+            <div class="day-header">M</div>
+            <div class="day-header">S</div>
+            <div class="day-header">S</div>
+            <div class="day-header">R</div>
+            <div class="day-header">K</div>
+            <div class="day-header">J</div>
+            <div class="day-header">S</div>
+        </div>
+        <div id="calendar-grid" class="calendar-grid-container">
+            <!-- Sel kalender akan diisi oleh JavaScript -->
+        </div>
+        
+        <!-- Tombol Download PDF -->
+        <div class="mt-8 text-center">
+            <button id="download-pdf-btn" class="btn-neobrutal py-3 px-8 text-lg font-bold">
+                <i data-lucide="download" class="h-5 w-5 inline-block mr-2"></i>
+                Download Jadwal (PDF)
+            </button>
+        </div>
+    </div>
+    
+    <!-- Modal pesan kustom untuk notifikasi -->
+    <div id="message-modal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50">
+        <div class="modal-content p-6 text-center max-w-sm rounded-[var(--radius)]">
+            <h3 class="text-xl font-black mb-2">Notifikasi</h3>
+            <p id="message-content" class="text-gray-600 mb-4"></p>
+            <button onclick="closeMessageModal()" class="btn-neobrutal py-2 px-6 font-bold">Tutup</button>
+        </div>
+    </div>
+
+    <!-- Modal untuk menambahkan/melihat acara -->
+    <div id="event-modal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50">
+        <div class="modal-content w-full max-w-2xl p-8 shadow-neobrutal overflow-y-auto max-h-screen rounded-[var(--radius)]">
+            <div class="flex justify-between items-center mb-6">
+                <h2 id="modal-title" class="text-2xl font-black"></h2>
+                <button onclick="closeEventModal()" class="btn-neobrutal p-2">
+                    <i data-lucide="x" class="h-6 w-6"></i>
+                </button>
+            </div>
+            
+            <!-- Tampilan list jadwal -->
+            <div id="event-list-view" class="space-y-4">
+                <p id="event-list-message" class="text-gray-600"></p>
+                <ul id="event-list-container" class="space-y-2"></ul>
+                <button id="add-new-btn" class="btn-neobrutal w-full py-3 font-bold mt-4">
+                    <i data-lucide="plus" class="h-5 w-5 inline-block mr-2"></i>
+                    Tambah Konten
+                </button>
+            </div>
+
+            <!-- Tampilan Detail Read-Only -->
+            <div id="detail-view" class="hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-black">Detail Konten</h3>
+                    <div class="flex space-x-2">
+                        <button id="edit-btn" class="btn-neobrutal p-2">
+                            <i data-lucide="pencil" class="h-6 w-6"></i>
+                        </button>
+                        <button id="back-btn" class="btn-neobrutal p-2">
+                            <i data-lucide="arrow-left" class="h-6 w-6"></i>
+                        </button>
+                    </div>
+                </div>
+                <div id="read-only-view" class="space-y-4">
+                    <div class="read-only-section">
+                        <h3 class="font-bold text-gray-600">Judul Konten</h3>
+                        <p id="ro-content-title" class="text-lg"></p>
+                    </div>
+                    <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+                        <div class="read-only-section flex-1">
+                            <h3 class="font-bold text-gray-600">Properti</h3>
+                            <p id="ro-property"></p>
+                        </div>
+                        <div class="read-only-section flex-1">
+                            <h3 class="font-bold text-gray-600">Jenis Konten</h3>
+                            <p id="ro-content-type"></p>
+                        </div>
+                    </div>
+                    <div class="read-only-section">
+                        <h3 class="font-bold text-gray-600">Status</h3>
+                        <p id="ro-status"></p>
+                    </div>
+                    <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+                        <div class="read-only-section flex-1">
+                            <h3 class="font-bold text-gray-600">Deadline Pembuatan</h3>
+                            <p id="ro-creation-deadline"></p>
+                        </div>
+                        <div class="read-only-section flex-1">
+                            <h3 class="font-bold text-gray-600">Dibuat oleh</h3>
+                            <p id="ro-creator"></p>
+                        </div>
+                    </div>
+                    <div class="read-only-section">
+                        <h3 class="font-bold text-gray-600">Draft Caption</h3>
+                        <p id="ro-draft-caption" class="whitespace-pre-line"></p>
+                    </div>
+                    <div class="read-only-section">
+                        <h3 class="font-bold text-gray-600">Link File Desain/Video</h3>
+                        <a id="ro-design-link" href="#" target="_blank" class="link-neobrutal break-words"></a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tampilan Form Edit (disembunyikan secara default) -->
+            <div id="form-view" class="hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 id="form-title" class="text-xl font-black">Tambah Konten</h3>
+                    <button id="form-back-btn" class="btn-neobrutal p-2">
+                        <i data-lucide="arrow-left" class="h-6 w-6"></i>
+                    </button>
+                </div>
+                <form id="content-form" class="space-y-4 mb-6">
+                    <div>
+                        <label class="block text-sm font-bold mb-1">Judul Konten</label>
+                        <input id="content-title" type="text">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold mb-1">Properti</label>
+                        <select id="property-select">
+                            <option value="">Pilih Properti</option>
+                            <option value="EWB">EWB</option>
+                            <option value="GEHS">GEHS</option>
+                            <option value="EGAC">EGAC</option>
+                            <option value="EH">EH</option>
+                            <option value="SKAE">SKAE</option>
+                            <option value="ESKAfe">ESKAfe</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold mb-1">Jenis Konten</label>
+                        <select id="content-type">
+                            <option value="Semua Social Media">Semua Social Media</option>
+                            <option value="Instagram Feed">Instagram Feed</option>
+                            <option value="Story Instagram">Story Instagram</option>
+                            <option value="TikTok">TikTok</option>
+                            <option value="TV Display">TV Display</option>
+                            <option value="Media Cetak">Media Cetak</option>
+                            <option value="Website">Website</option>
+                            <option value="Lainnya">Lainnya</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold mb-1">Status</label>
+                        <select id="content-status">
+                            <option value="Editing">Editing</option>
+                            <option value="Take Konten">Take Konten</option>
+                            <option value="Final Touch">Final Touch</option>
+                            <option value="Done">Done</option>
+                            <option value="On Hold">On Hold</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold mb-1">Deadline Pembuatan</label>
+                        <input id="creation-deadline" type="date">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold mb-1">Dibuat oleh</label>
+                        <select id="creator-select" multiple>
+                            <option value="Antony">Antony</option>
+                            <option value="Tian">Tian</option>
+                            <option value="Steven">Steven</option>
+                            <option value="Mutia">Mutia</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold mb-1">Draft Caption</label>
+                        <textarea id="draft-caption" rows="3" placeholder="Tulis draft caption di sini..."></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold mb-1">Link File Desain/Video</label>
+                        <input id="design-link" type="url" placeholder="https://drive.google.com/link">
+                    </div>
+                </form>
+
+                <!-- Bagian komentar -->
+                <div id="comment-section">
+                    <h3 class="text-xl font-black mb-2">Komentar</h3>
+                    <div id="comment-list" class="space-y-3 mb-4">
+                        <!-- Komentar akan diisi oleh JavaScript -->
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <input id="new-comment" type="text" placeholder="Tulis komentar..." class="flex-grow">
+                        <button id="add-comment-btn" class="btn-neobrutal p-3">
+                            <i data-lucide="send" class="h-6 w-6"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Tombol simpan/tambah -->
+                <div id="action-buttons" class="flex justify-between items-center mt-6">
+                    <button id="save-btn" class="btn-neobrutal py-3 px-6 text-lg font-bold">Simpan</button>
+                    <button id="delete-btn" class="text-red-500 font-bold py-2 px-4 hidden">Hapus</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Skrip untuk fungsionalitas UI -->
+    <script>
+        const DATA_HANDLER_URL = '../data_handler.php';
+        let currentDate = new Date();
+        let currentView = 'monthly';
+        let currentSelectedDate = null;
+        let currentSelectedEventIndex = -1;
+        let tasksByDate = {};
+        const availableUsers = ['Antony', 'Tian', 'Steven', 'Mutia'];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            fetchAndRenderTasks();
+            
+            document.getElementById('add-new-btn').addEventListener('click', () => {
+                showFormView(currentSelectedDate);
+            });
+            
+            document.getElementById('prev-btn').addEventListener('click', () => {
+                if (currentView === 'monthly') {
+                    currentDate.setMonth(currentDate.getMonth() - 1);
+                } else {
+                    currentDate.setDate(currentDate.getDate() - 7);
+                }
+                renderCalendar();
+            });
+
+            document.getElementById('next-btn').addEventListener('click', () => {
+                if (currentView === 'monthly') {
+                    currentDate.setMonth(currentDate.getMonth() + 1);
+                } else {
+                    currentDate.setDate(currentDate.getDate() + 7);
+                }
+                renderCalendar();
+            });
+            
+            document.getElementById('view-monthly').addEventListener('click', () => {
+                currentView = 'monthly';
+                document.getElementById('view-monthly').classList.add('active');
+                document.getElementById('view-weekly').classList.remove('active');
+                renderCalendar();
+            });
+            
+            document.getElementById('view-weekly').addEventListener('click', () => {
+                currentView = 'weekly';
+                document.getElementById('view-weekly').classList.add('active');
+                document.getElementById('view-monthly').classList.remove('active');
+                renderCalendar();
+            });
+            
+            document.getElementById('download-pdf-btn').addEventListener('click', () => {
+                generateDailyReportPdf();
+            });
+        });
+
+        function showLoading() {
+            document.getElementById('loading-overlay').classList.add('active');
+        }
+
+        function hideLoading() {
+            document.getElementById('loading-overlay').classList.remove('active');
+        }
+        
+        async function fetchAndRenderTasks() {
+            showLoading();
+            try {
+                const response = await fetch('../task_queue.json?t=' + new Date().getTime());
+                if (!response.ok) {
+                    throw new Error('Failed to fetch tasks.');
+                }
+                const tasks = await response.json();
+                tasksByDate = {};
+                
+                // Filter tugas yang hanya berasal dari kalender
+                const filteredTasks = tasks.filter(task => task.source === 'calendar');
+
+                filteredTasks.forEach(task => {
+                    if (task.Deadline) {
+                        const dateObj = new Date(task.Deadline);
+                        // Perbaiki format tanggal agar konsisten (YYYY-M-D)
+                        const dateKey = `${dateObj.getFullYear()}-${dateObj.getMonth() + 1}-${dateObj.getDate()}`;
+                        if (!tasksByDate[dateKey]) {
+                            tasksByDate[dateKey] = [];
+                        }
+                        tasksByDate[dateKey].push(task);
+                    }
+                });
+                renderCalendar();
+            } catch (error) {
+                showMessageModal('Gagal memuat tugas: ' + error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function renderCalendar() {
+            const calendarGrid = document.getElementById('calendar-grid');
+            calendarGrid.innerHTML = '';
+            const viewDisplay = document.getElementById('view-display');
+
+            if (currentView === 'monthly') {
+                const month = currentDate.getMonth();
+                const year = currentDate.getFullYear();
+                const monthName = currentDate.toLocaleString('id-ID', { month: 'long', year: 'numeric' });
+                viewDisplay.textContent = `${monthName.charAt(0).toUpperCase() + monthName.slice(1)}`;
+                
+                const firstDayOfMonth = new Date(year, month, 1).getDay();
+                const daysInMonth = new Date(year, month + 1, 0).getDate();
+                
+                // Sesuaikan agar hari dimulai dari Senin
+                let startDay = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1;
+
+                for (let i = 0; i < startDay; i++) {
+                    const emptyCell = document.createElement('div');
+                    emptyCell.className = 'day-cell';
+                    emptyCell.style.opacity = 0;
+                    calendarGrid.appendChild(emptyCell);
+                }
+
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const dayCell = createDayCell(new Date(year, month, day), 'monthly');
+                    calendarGrid.appendChild(dayCell);
+                }
+
+            } else { // weekly view
+                const currentWeekStart = new Date(currentDate);
+                // Sesuaikan agar minggu dimulai dari Senin
+                currentWeekStart.setDate(currentDate.getDate() - (currentDate.getDay() === 0 ? 6 : currentDate.getDay() - 1));
+                
+                const weekEnd = new Date(currentWeekStart);
+                weekEnd.setDate(currentWeekStart.getDate() + 6);
+
+                const startMonthName = currentWeekStart.toLocaleString('id-ID', { month: 'long' });
+                const endMonthName = weekEnd.toLocaleString('id-ID', { month: 'long' });
+                const startYear = currentWeekStart.getFullYear();
+                const endYear = weekEnd.getFullYear();
+                
+                let viewText = `${startMonthName.charAt(0).toUpperCase() + startMonthName.slice(1)} ${startYear}`;
+                if (startMonthName !== endMonthName || startYear !== endYear) {
+                    viewText += ` - ${endMonthName.charAt(0).toUpperCase() + endMonthName.slice(1)} ${endYear}`;
+                }
+                viewDisplay.textContent = viewText;
+
+                for (let i = 0; i < 7; i++) {
+                    const day = new Date(currentWeekStart);
+                    day.setDate(currentWeekStart.getDate() + i);
+                    const dayCell = createDayCell(day, 'weekly');
+                    calendarGrid.appendChild(dayCell);
+                }
+            }
+            lucide.createIcons();
+        }
+        
+        function createDayCell(date, view) {
+            const dayCell = document.createElement('div');
+            dayCell.className = `day-cell p-2 ${view}`;
+            
+            const dayNumber = document.createElement('div');
+            dayNumber.className = 'day-number';
+            dayNumber.textContent = date.getDate();
+            dayCell.appendChild(dayNumber);
+
+            const today = new Date();
+            if (date.getDate() === today.getDate() && date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear()) {
+                dayCell.classList.add('bg-[#FFE5F0]');
+            }
+
+            const dateKey = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+            const eventsForDate = tasksByDate[dateKey] || [];
+            
+            const eventStripContainer = document.createElement('div');
+            eventStripContainer.className = 'event-strip-container';
+
+            eventsForDate.forEach(task => {
+                const eventStrip = document.createElement('div');
+                const propertyClass = task.Property ? `event-strip-${task.Property.toLowerCase()}` : '';
+                eventStrip.className = `event-strip ${propertyClass}`;
+                eventStripContainer.appendChild(eventStrip);
+            });
+            dayCell.appendChild(eventStripContainer);
+
+            dayCell.addEventListener('click', () => {
+                showEventModal(dateKey);
+            });
+
+            return dayCell;
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return '-';
+            const parts = dateString.split('-');
+            // Cek apakah format tanggal adalah YYYY-MM-DD
+            if (parts.length === 3) {
+                const dateObj = new Date(dateString + 'T00:00:00'); // Tambahkan T00:00:00 untuk menghindari masalah zona waktu
+                if (!isNaN(dateObj)) {
+                    const day = String(dateObj.getDate()).padStart(2, '0');
+                    const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+                    const year = dateObj.getFullYear();
+                    return `${day}/${month}/${year}`;
+                }
+            }
+            // Jika format tidak sesuai, coba format lain atau kembalikan aslinya
+            try {
+                const [year, month, day] = dateString.split('-');
+                if (day && month && year) {
+                    return `${day.padStart(2, '0')}/${month.padStart(2, '0')}/${year}`;
+                }
+            } catch (e) {
+                return dateString;
+            }
+            return dateString;
+        }
+        
+        function showEventModal(date) {
+            currentSelectedDate = date;
+            const modal = document.getElementById('event-modal');
+            const modalTitle = document.getElementById('modal-title');
+            const eventListView = document.getElementById('event-list-view');
+            const eventListContainer = document.getElementById('event-list-container');
+            const eventListMessage = document.getElementById('event-list-message');
+            const detailView = document.getElementById('detail-view');
+            const formView = document.getElementById('form-view');
+
+            modalTitle.textContent = `Jadwal pada ${formatDate(date)}`;
+            eventListContainer.innerHTML = '';
+            
+            const tasksForDate = tasksByDate[date] || [];
+
+            if (tasksForDate.length > 0) {
+                eventListMessage.textContent = 'Pilih konten untuk melihat detail:';
+                tasksForDate.forEach((task, index) => {
+                    const li = document.createElement('li');
+                    li.className = 'list-item-btn p-3 flex justify-between items-center cursor-pointer mb-2';
+                    li.innerHTML = `
+                        <span>${task['Project Name'] || '-'} (${task['Property'] || '-'})</span>
+                        <span class="text-sm font-bold">${task['Work Status'] || '-'}</span>
+                    `;
+                    li.addEventListener('click', () => {
+                        showDetailView(date, index);
+                    });
+                    eventListContainer.appendChild(li);
+                });
+            } else {
+                eventListMessage.textContent = 'Tidak ada jadwal konten pada tanggal ini.';
+            }
+
+            eventListView.classList.remove('hidden');
+            detailView.classList.add('hidden');
+            formView.classList.add('hidden');
+            modal.classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function showDetailView(date, index) {
+            currentSelectedEventIndex = index;
+            const taskData = tasksByDate[date][index];
+            const eventListView = document.getElementById('event-list-view');
+            const detailView = document.getElementById('detail-view');
+            const formView = document.getElementById('form-view');
+            const editBtn = document.getElementById('edit-btn');
+            const readOnlyView = document.getElementById('read-only-view');
+            
+            eventListView.classList.add('hidden');
+            detailView.classList.remove('hidden');
+            formView.classList.add('hidden');
+            readOnlyView.classList.remove('hidden');
+            
+            editBtn.onclick = () => {
+                showFormView(date, index);
+            };
+
+            document.getElementById('ro-content-title').textContent = taskData['Project Name'] || '-';
+            document.getElementById('ro-property').textContent = taskData['Property'] || '-';
+            document.getElementById('ro-content-type').textContent = taskData['Platform'] || '-';
+            document.getElementById('ro-status').textContent = taskData['Work Status'] || '-';
+            document.getElementById('ro-creation-deadline').textContent = formatDate(taskData['Deadline']) || '-';
+            document.getElementById('ro-creator').textContent = taskData['PIC / Team'] || '-';
+            document.getElementById('ro-draft-caption').textContent = taskData['Notes'] || '-';
+            
+            const designLinkElement = document.getElementById('ro-design-link');
+            designLinkElement.textContent = taskData['Attachment Link'] || '-';
+            designLinkElement.href = taskData['Attachment Link'] || '#';
+
+            const backBtn = document.getElementById('back-btn');
+            backBtn.onclick = () => {
+                showEventModal(date);
+            };
+            
+            lucide.createIcons();
+        }
+
+        function showFormView(date, index = -1) {
+            currentSelectedEventIndex = index;
+            const eventListView = document.getElementById('event-list-view');
+            const detailView = document.getElementById('detail-view');
+            const formView = document.getElementById('form-view');
+            const formTitle = document.getElementById('form-title');
+            const contentForm = document.getElementById('content-form');
+            const saveBtn = document.getElementById('save-btn');
+            const deleteBtn = document.getElementById('delete-btn');
+            const commentSection = document.getElementById('comment-section');
+
+            eventListView.classList.add('hidden');
+            detailView.classList.add('hidden');
+            formView.classList.remove('hidden');
+            contentForm.reset();
+
+            if (index !== -1) {
+                formTitle.textContent = 'Edit Konten';
+                saveBtn.textContent = 'Simpan';
+                deleteBtn.classList.remove('hidden');
+                commentSection.classList.remove('hidden');
+                
+                const taskData = tasksByDate[date][index];
+                document.getElementById('content-title').value = taskData['Project Name'] || '';
+                document.getElementById('property-select').value = taskData['Property'] || '';
+                document.getElementById('content-type').value = taskData['Platform'] || '';
+                document.getElementById('content-status').value = taskData['Work Status'] || 'Editing';
+                document.getElementById('creation-deadline').value = taskData['Deadline'] || '';
+                document.getElementById('draft-caption').value = taskData['Notes'] || '';
+                document.getElementById('design-link').value = taskData['Attachment Link'] || '';
+                
+                const creatorSelect = document.getElementById('creator-select');
+                const pics = taskData['PIC / Team'] ? taskData['PIC / Team'].split(',').map(p => p.trim()) : [];
+                Array.from(creatorSelect.options).forEach(option => {
+                    option.selected = pics.includes(option.value);
+                });
+            } else {
+                formTitle.textContent = 'Tambah Konten';
+                saveBtn.textContent = 'Tambah';
+                deleteBtn.classList.add('hidden');
+                commentSection.classList.add('hidden');
+            }
+
+            saveBtn.onclick = () => {
+                saveTask(date, index);
+                closeEventModal();
+            };
+            
+            deleteBtn.onclick = () => {
+                deleteTask(date, index);
+                closeEventModal();
+            };
+
+            document.getElementById('form-back-btn').onclick = () => {
+                if (index !== -1) {
+                    showDetailView(date, index);
+                } else {
+                    showEventModal(date);
+                }
+            };
+            lucide.createIcons();
+        }
+
+        async function saveTask(date, index) {
+            showLoading();
+            
+            const selectedCreators = Array.from(document.getElementById('creator-select').options)
+                .filter(option => option.selected)
+                .map(option => option.value);
+            
+            const taskData = {
+                'Task ID': index !== -1 ? tasksByDate[date][index]['Task ID'] : '',
+                'Project Name': document.getElementById('content-title').value,
+                'Property': document.getElementById('property-select').value,
+                'Platform': document.getElementById('content-type').value,
+                'Work Status': document.getElementById('content-status').value,
+                'Deadline': document.getElementById('creation-deadline').value,
+                'PIC / Team': selectedCreators.join(', '),
+                'Notes': document.getElementById('draft-caption').value,
+                'Attachment Link': document.getElementById('design-link').value,
+                'Priority': 'Medium', // Default value, bisa disesuaikan
+                'Approval Status': 'To Be Announced (TBA)', // Default value, bisa disesuaikan
+                'Progress (%)': '', // Default value, bisa disesuaikan
+                'source': 'calendar' // NEW: Tambahkan penanda sumber
+            };
+            
+            const action = index !== -1 ? 'update' : 'add';
+
+            try {
+                const response = await fetch(DATA_HANDLER_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: action, task: taskData })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                if (result.status === 'success') {
+                    showMessageModal(`Tugas berhasil ${action === 'add' ? 'ditambah' : 'diperbarui'}!`);
+                    fetchAndRenderTasks();
+                } else {
+                    showMessageModal('Gagal menyimpan tugas: ' + result.message);
+                }
+            } catch (error) {
+                showMessageModal('Terjadi kesalahan saat menyimpan tugas: ' + error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function deleteTask(date, index) {
+            showLoading();
+            const taskId = tasksByDate[date][index]['Task ID'];
+
+            try {
+                const response = await fetch(DATA_HANDLER_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'delete', taskId: taskId })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                if (result.status === 'success') {
+                    showMessageModal('Tugas berhasil dihapus!');
+                    fetchAndRenderTasks();
+                } else {
+                    showMessageModal('Gagal menghapus tugas: ' + result.message);
+                }
+            } catch (error) {
+                showMessageModal('Terjadi kesalahan saat menghapus tugas: ' + error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function generateDailyReportPdf() {
+            try {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF('landscape');
+                const today = new Date();
+                const formattedDate = today.toLocaleDateString('en-US', { day: '2-digit', month: 'long', year: 'numeric' });
+                const reportTitle = `Daily Content Report - ${formattedDate}`;
+
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(22);
+                doc.text(reportTitle, 10, 15);
+                doc.setFontSize(11);
+                doc.text(`Generated on: ${new Date().toLocaleString('en-US')}`, 10, 22);
+
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(9);
+                let y = 35;
+                const allTasks = Object.values(tasksByDate).flat();
+
+                if (allTasks.length === 0) {
+                    doc.text('No content scheduled for today.', 10, y + 10);
+                } else {
+                    const columnHeaders = [
+                        'Project', 'Activity', 'Platform', 'Status', 'Deadline', 'PIC / Team', 'Approval', 'Attachment'
+                    ];
+                    const finalColumnWidths = [40, 40, 30, 30, 20, 30, 30, 20];
+
+                    doc.setFont('helvetica', 'bold');
+                    let currentX = 10;
+                    y += 10;
+                    columnHeaders.forEach((headerText, i) => {
+                        doc.text(headerText, currentX, y);
+                        currentX += finalColumnWidths[i];
+                    });
+                    
+                    const maxHeaderHeight = columnHeaders.reduce((max, headerText, i) => {
+                        const lines = doc.splitTextToSize(headerText, finalColumnWidths[i] - 2);
+                        return Math.max(max, lines.length * (doc.getLineHeight() / doc.internal.scaleFactor));
+                    }, 0);
+
+                    y += maxHeaderHeight + 3;
+                    doc.line(10, y, doc.internal.pageSize.width - 10, y);
+                    y += 7;
+                    doc.setFont('helvetica', 'normal');
+
+                    allTasks.forEach(task => {
+                        let currentX = 10;
+                        const taskStatusDisplay = task['Work Status'] || '-';
+                        let formattedDeadline = task['Deadline'] ? formatDate(task['Deadline']) : '-';
+                        
+                        const rowData = [
+                            task['Project Name'] || '-',
+                            task['Activity / Task'] || '-',
+                            task['Platform'] || '-',
+                            taskStatusDisplay,
+                            formattedDeadline,
+                            task['PIC / Team'] || '-',
+                            task['Approval Status'] || '-'
+                        ];
+                        
+                        const rowHeight = 10; // Cukup untuk satu baris teks
+                        if (y + rowHeight > doc.internal.pageSize.height - 20) {
+                            doc.addPage();
+                            y = 15;
+                            doc.setFont('helvetica', 'bold');
+                            let newX = 10;
+                            columnHeaders.forEach((headerText, i) => {
+                                doc.text(headerText, newX, y);
+                                newX += finalColumnWidths[i];
+                            });
+                            y += 3;
+                            doc.line(10, y, doc.internal.pageSize.width - 10, y);
+                            y += 7;
+                            doc.setFont('helvetica', 'normal');
+                        }
+
+                        rowData.forEach((cellText, i) => {
+                            const textLines = doc.splitTextToSize(cellText, finalColumnWidths[i] - 2);
+                            doc.text(textLines, currentX, y + 2);
+                            currentX += finalColumnWidths[i];
+                        });
+
+                        const attachmentColIndex = columnHeaders.indexOf('Attachment');
+                        const attachmentX = 10 + finalColumnWidths.slice(0, attachmentColIndex).reduce((sum, width) => sum + width, 0);
+                        
+                        const attachmentLink = task['Attachment Link'] || '';
+                        if (attachmentLink.startsWith('http')) {
+                            const linkText = 'View';
+                            doc.setTextColor(0, 0, 255);
+                            doc.textWithLink(linkText, attachmentX + 2, y + 5, { url: attachmentLink });
+                            doc.setTextColor(0);
+                        } else {
+                            doc.text('-', attachmentX + 2, y + 5);
+                        }
+
+                        y += rowHeight;
+                        doc.line(10, y, doc.internal.pageSize.width - 10, y);
+                        y += 2;
+                    });
+                }
+                doc.save(`Daily_Report_${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}.pdf`);
+                showMessageModal('Laporan PDF berhasil dibuat!');
+            } catch (error) {
+                showMessageModal('Terjadi kesalahan saat membuat laporan PDF. Detail: ' + error.message);
+            }
+        }
+
+        window.closeEventModal = function() {
+            const modal = document.getElementById('event-modal');
+            modal.classList.add('hidden');
+        };
+
+        function showMessageModal(message) {
+            const modal = document.getElementById('message-modal');
+            const messageContent = document.getElementById('message-content');
+            messageContent.textContent = message;
+            modal.classList.remove('hidden');
+        };
+
+        window.closeMessageModal = function() {
+            const modal = document.getElementById('message-modal');
+            modal.classList.add('hidden');
+        };
+
+    </script>
+</body>
+</html>
