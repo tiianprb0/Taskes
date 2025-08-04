@@ -10,8 +10,11 @@
         "PIC / Team": "Tian",
         "Deadline": "2025-08-02",
         "Priority": "High",
-        "Attachment Link": "",
-        "Progress (%)": ""
+        "Attachment Link": "https://daytian.fun/w/work/img/img_688da81d7f81f4.42006281.jpg",
+        "Progress (%)": "",
+        "isPinned": false,
+        "pinnedBy": null,
+        "source": "dashboard"
     },
     {
         "Task ID": "ca995cb7-8ef2-4241-8086-85ddd91535cf",
@@ -25,7 +28,10 @@
         "Deadline": "2025-08-07",
         "Priority": "High",
         "Attachment Link": "https://daytian.fun/w/work/img/img_688cc1f22ec501.86586335.jpg",
-        "Progress (%)": "80"
+        "Progress (%)": "80",
+        "isPinned": false,
+        "pinnedBy": null,
+        "source": "dashboard"
     },
     {
         "Task ID": "70430e28-25ea-421b-81c9-74fd7e19de8d",
@@ -39,7 +45,8 @@
         "Deadline": "",
         "Priority": "Medium",
         "Attachment Link": "",
-        "Progress (%)": ""
+        "Progress (%)": "",
+        "source": "dashboard"
     },
     {
         "Task ID": "17da4ae9-9fcc-4116-b086-6dab0fae1684",
@@ -53,7 +60,8 @@
         "Deadline": "",
         "Priority": "Medium",
         "Attachment Link": "",
-        "Progress (%)": ""
+        "Progress (%)": "",
+        "source": "dashboard"
     },
     {
         "Task ID": "f367dcf4-359d-470c-a7b5-a7915cbca0fc",
@@ -67,7 +75,8 @@
         "Deadline": "",
         "Priority": "Low",
         "Attachment Link": "https://daytian.fun/w/work/img/img_688cc3c8909c78.96175988.jpg",
-        "Progress (%)": ""
+        "Progress (%)": "",
+        "source": "dashboard"
     },
     {
         "Task ID": "05e7e466-fcfe-46b3-8f89-0a8af1e79346",
@@ -81,7 +90,8 @@
         "Deadline": "2025-08-04",
         "Priority": "Medium",
         "Attachment Link": "https://daytian.fun/w/work/img/img_688cc465b4f536.26076408.jpg",
-        "Progress (%)": ""
+        "Progress (%)": "",
+        "source": "dashboard"
     },
     {
         "Task ID": "9aac6bfc-81ec-4c46-b55b-d74a4339667b",
@@ -95,7 +105,8 @@
         "Deadline": "2025-08-07",
         "Priority": "High",
         "Attachment Link": "",
-        "Progress (%)": ""
+        "Progress (%)": "",
+        "source": "dashboard"
     },
     {
         "Task ID": "9f81a1ed-28d3-4f91-8636-dea029b94d23",
@@ -109,7 +120,8 @@
         "Deadline": "",
         "Priority": "Low",
         "Attachment Link": "https://daytian.fun/w/work/img/img_688cc5603137d6.47039483.jpg",
-        "Progress (%)": ""
+        "Progress (%)": "",
+        "source": "dashboard"
     },
     {
         "Task ID": "683e6780-c581-4394-8686-1e7a942c4be1",
@@ -123,7 +135,8 @@
         "Deadline": "",
         "Priority": "Low",
         "Attachment Link": "https://daytian.fun/w/work/img/img_688cc5d84c8e40.13316698.jpg",
-        "Progress (%)": ""
+        "Progress (%)": "",
+        "source": "dashboard"
     },
     {
         "Task ID": "2996deeb-2f3d-4863-86cb-bd2390e2db99",
@@ -137,7 +150,8 @@
         "Deadline": "2025-08-05",
         "Priority": "Medium",
         "Attachment Link": "https://daytian.fun/w/work/img/img_688cc67eb79108.92448028.jpg",
-        "Progress (%)": "85"
+        "Progress (%)": "85",
+        "source": "dashboard"
     },
     {
         "Task ID": "9c47b6b1-da69-4e8a-81b0-863a955d5b9c",
@@ -151,7 +165,8 @@
         "Deadline": "",
         "Priority": "Low",
         "Attachment Link": "https://daytian.fun/w/work/img/img_688cc6b890cba3.79285916.jpg",
-        "Progress (%)": ""
+        "Progress (%)": "",
+        "source": "dashboard"
     },
     {
         "Task ID": "0e9bb691-3b09-473d-954d-bea3dc1bb4a3",
@@ -165,7 +180,8 @@
         "Deadline": "",
         "Priority": "Medium",
         "Attachment Link": "https://daytian.fun/w/work/img/img_688cc7656353c7.52424671.jpg",
-        "Progress (%)": ""
+        "Progress (%)": "",
+        "source": "dashboard"
     },
     {
         "Task ID": "df7aada1-22b8-4022-8599-a6fdb8e500d5",
@@ -179,7 +195,10 @@
         "Deadline": "",
         "Priority": "Medium",
         "Attachment Link": "https://daytian.fun/w/work/img/img_688d67ae90aea4.77784134.jpg",
-        "Progress (%)": "90"
+        "Progress (%)": "90",
+        "isPinned": false,
+        "pinnedBy": null,
+        "source": "dashboard"
     },
     {
         "Task ID": "fcea2028-2fca-44b5-bbb9-9cc508fa120a",
@@ -193,7 +212,10 @@
         "Deadline": "",
         "Priority": "Medium",
         "Attachment Link": "https://daytian.fun/w/work/img/img_688d6841a7f8c3.89954856.jpg",
-        "Progress (%)": ""
+        "Progress (%)": "",
+        "isPinned": false,
+        "pinnedBy": null,
+        "source": "dashboard"
     },
     {
         "Task ID": "9662d93d-5d66-4350-b87a-2eb4a725135b",
@@ -207,20 +229,142 @@
         "Deadline": "",
         "Priority": "Medium",
         "Attachment Link": "",
-        "Progress (%)": ""
+        "Progress (%)": "",
+        "isPinned": false,
+        "pinnedBy": null,
+        "source": "dashboard"
     },
     {
         "Task ID": "f789bd13-57a9-441d-a0aa-83601820e1c4",
         "Project Name": "Materi Presentasi Dokter Anisa",
         "Activity / Task": "Editing ppt & digital slide",
         "Platform": "TV Display",
-        "Work Status": "Editing",
-        "Approval Status": "To Be Announced (TBA)",
+        "Work Status": "Done",
+        "Approval Status": "Approved",
         "Notes": "-",
         "PIC / Team": "Mutia",
         "Deadline": "2025-08-02",
         "Priority": "High",
+        "Attachment Link": "https://daytian.fun/w/work/img/img_688da971d6ced1.84090809.png",
+        "Progress (%)": "",
+        "isPinned": false,
+        "pinnedBy": null,
+        "source": "dashboard"
+    },
+    {
+        "Task ID": "e559ac57-723a-4654-9218-14134972533c",
+        "Project Name": "Promo Klinik",
+        "Activity / Task": "Research & Editing",
+        "Platform": "All Social Media",
+        "Work Status": "Editing",
+        "Approval Status": "To Be Announced (TBA)",
+        "Notes": "Untuk full bulan agustus, 8.8, dan pay day sale",
+        "PIC / Team": "Mutia",
+        "Deadline": "",
+        "Priority": "High",
         "Attachment Link": "",
-        "Progress (%)": ""
+        "isPinned": false,
+        "pinnedBy": null,
+        "Progress (%)": "",
+        "source": "dashboard"
+    },
+    {
+        "Task ID": "1e89f65d-cdf8-4df2-a193-f081c0d1a238",
+        "Project Name": "test baru ya",
+        "Activity / Task": "12345",
+        "Property": "EGAC",
+        "Platform": "Semua Social Media, TikTok",
+        "Work Status": "Take Konten",
+        "Approval Status": "Approved",
+        "Notes": "12345",
+        "PIC / Team": "Tian",
+        "Deadline": "2025-08-15",
+        "Priority": "Low",
+        "Attachment Link": "",
+        "isPinned": false,
+        "pinnedBy": null,
+        "Progress (%)": "",
+        "source": "dashboard"
+    },
+    {
+        "Task ID": "9e02f7dc-496d-49b0-8b5b-50922766afa6",
+        "Project Name": "test baru ya",
+        "Activity / Task": "12345",
+        "Property": "EGAC",
+        "Platform": "Semua Social Media, TikTok",
+        "Work Status": "Take Konten",
+        "Approval Status": "Approved",
+        "Notes": "12345",
+        "PIC / Team": "Tian",
+        "Deadline": "2025-08-15",
+        "Priority": "Low",
+        "Attachment Link": "",
+        "isPinned": false,
+        "pinnedBy": null,
+        "Progress (%)": "",
+        "source": "dashboard"
+    },
+    {
+        "Task ID": "7030bdd2-6ceb-4e15-91ab-98338aa46b8b",
+        "Project Name": "ini contoh laagi yaaa...",
+        "Activity / Task": "ini contoh laagi yaaa...",
+        "Property": "GEHS",
+        "Platform": "Story Instagram",
+        "Work Status": "Editing",
+        "Approval Status": "To Be Announced (TBA)",
+        "Notes": "",
+        "PIC / Team": "Tian",
+        "Deadline": "",
+        "Priority": "Low",
+        "Attachment Link": "",
+        "isPinned": false,
+        "pinnedBy": null,
+        "Progress (%)": "",
+        "source": "dashboard"
+    },
+    {
+        "Task ID": "9a4ad73c-7c3b-4f3e-bc14-e9b5e92e9b59",
+        "Project Name": "contoh calender",
+        "Property": "GEHS",
+        "Platform": "Story Instagram",
+        "Work Status": "Take Konten",
+        "Deadline": "2025-08-08",
+        "PIC / Team": "Tian",
+        "Notes": "contoh calender",
+        "Attachment Link": "",
+        "Priority": "Medium",
+        "Approval Status": "To Be Announced (TBA)",
+        "Progress (%)": "",
+        "source": "dashboard"
+    },
+    {
+        "Task ID": "0b174ab2-fc63-42c2-935b-0f27b2ac26f3",
+        "Project Name": "contoh pakai calender",
+        "Property": "GEHS",
+        "Platform": "Story Instagram",
+        "Work Status": "Editing",
+        "Deadline": "2025-08-07",
+        "PIC / Team": "Tian",
+        "Notes": "contoh pakai calender",
+        "Attachment Link": "",
+        "Priority": "Medium",
+        "Approval Status": "To Be Announced (TBA)",
+        "Progress (%)": "",
+        "source": "calendar"
+    },
+    {
+        "Task ID": "3774d51e-279d-497d-b53a-76292e09bac4",
+        "Project Name": "contoh contoh",
+        "Property": "GEHS",
+        "Platform": "Instagram Feed",
+        "Work Status": "Take Konten",
+        "Deadline": "2025-08-09",
+        "PIC / Team": "Tian",
+        "Notes": "contoh contoh",
+        "Attachment Link": "",
+        "Priority": "Medium",
+        "Approval Status": "To Be Announced (TBA)",
+        "Progress (%)": "",
+        "source": "calendar"
     }
 ]
